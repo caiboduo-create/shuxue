@@ -237,8 +237,8 @@ function PointLineFigure({ a, b, c, x0, y0, maxC }) {
       {/* 垂线段（即点到直线的距离） */}
       <line x1={px(x0)} y1={py(y0)} x2={px(fx)} y2={py(fy)} stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" />
       {/* 垂足与点 P */}
-      <circle cx={px(fx)} cy={py(fy)} r="3.5" fill={C.amber} />
-      <circle cx={px(x0)} cy={py(y0)} r="5" fill={C.blue} />
+      <circle cx={px(fx)} cy={py(fy)} r="5" fill={C.amber} stroke="#fff" strokeWidth="1.5" />
+      <circle cx={px(x0)} cy={py(y0)} r="8" fill={C.blue} stroke="#fff" strokeWidth="2" />
       <text x={px(x0) + 7} y={py(y0) - 8} fill={C.ink} fontSize="13" fontWeight="700">P({x0},{y0})</text>
       <text x="50%" y={H - 6} textAnchor="middle" fill="#94a3b8" fontSize="13">虚线为 P 到直线的垂线段（即距离）</text>
     </svg>
@@ -436,8 +436,8 @@ function NumberLineFigure({ a, b, op }) {
   const hi = Math.max(0, a, result) + 1;
   const range = hi - lo;
   const W = 340;
-  const pad = 22;
-  const y = 64;
+  const pad = 24;
+  const y = 62;
   const sc = (W - pad * 2) / range;
   const X = (v) => pad + (v - lo) * sc;
   const step = range > 24 ? Math.ceil(range / 16) : 1;
@@ -447,25 +447,26 @@ function NumberLineFigure({ a, b, op }) {
     ticks.push(<text key={`l${v}`} x={X(v)} y={y + 18} textAnchor="middle" fill="#94a3b8" fontSize="10">{v}</text>);
   }
   const dir = result >= a ? 1 : -1;
-  const arcTop = y - 30;
   return (
-    <svg viewBox={`0 0 ${W} 100`} width="100%" style={{ maxWidth: 380 }}>
+    <svg viewBox={`0 0 ${W} 112`} width="100%" style={{ maxWidth: 380 }}>
       <line x1={pad - 6} y1={y} x2={W - pad + 6} y2={y} stroke={C.ink} strokeWidth="1.5" />
       {ticks}
       {/* 0 处加粗 */}
-      <line x1={X(0)} y1={y - 8} x2={X(0)} y2={y + 8} stroke={C.ink} strokeWidth="2" />
-      {/* 从 a 跳到 result 的弧线 + 箭头 */}
+      <line x1={X(0)} y1={y - 7} x2={X(0)} y2={y + 7} stroke={C.ink} strokeWidth="2" />
+      {/* 从起点跳到结果的弧线 + 箭头（橙色 = 这一步的移动） */}
       {result !== a && (
         <>
-          <path d={`M ${X(a)} ${y - 6} Q ${(X(a) + X(result)) / 2} ${arcTop} ${X(result)} ${y - 6}`} fill="none" stroke={C.amber} strokeWidth="2.5" />
-          <polygon points={`${X(result)},${y - 6} ${X(result) - dir * 8},${y - 11} ${X(result) - dir * 8},${y - 1}`} fill={C.amber} />
-          <text x={(X(a) + X(result)) / 2} y={arcTop - 4} textAnchor="middle" fill="#b45309" fontSize="12" fontWeight="700">{op} ({b})</text>
+          <path d={`M ${X(a)} ${y - 9} Q ${(X(a) + X(result)) / 2} ${y - 40} ${X(result)} ${y - 9}`} fill="none" stroke={C.amber} strokeWidth="3" />
+          <polygon points={`${X(result)},${y - 7} ${X(result) - dir * 9},${y - 13} ${X(result) - dir * 9},${y - 1}`} fill={C.amber} />
+          <text x={(X(a) + X(result)) / 2} y={y - 44} textAnchor="middle" fill="#b45309" fontSize="13" fontWeight="700">{op} ({b})</text>
         </>
       )}
-      <circle cx={X(a)} cy={y} r="5" fill={C.blue} />
-      <text x={X(a)} y={y + 32} textAnchor="middle" fill={C.blue} fontSize="12" fontWeight="700">起点 {a}</text>
-      <circle cx={X(result)} cy={y} r="5" fill={C.green} />
-      <text x={X(result)} y={y - 14} textAnchor="middle" fill={C.green} fontSize="12" fontWeight="700">{result}</text>
+      {/* 起点：蓝色大圆点，标在下方 */}
+      <circle cx={X(a)} cy={y} r="9" fill={C.blue} stroke="#fff" strokeWidth="2.5" />
+      <text x={X(a)} y={y + 36} textAnchor="middle" fill={C.blue} fontSize="13" fontWeight="700">起点</text>
+      {/* 结果：绿色大圆点，标在上方 */}
+      <circle cx={X(result)} cy={y} r="9" fill={C.green} stroke="#fff" strokeWidth="2.5" />
+      <text x={X(result)} y={y - 18} textAnchor="middle" fill={C.green} fontSize="13" fontWeight="700">结果</text>
     </svg>
   );
 }

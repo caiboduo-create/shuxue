@@ -13,15 +13,8 @@ export default function NumberLineDemo() {
 
   const result = op === '+' ? a + b : a - b;
   const visual = { kind: 'numberline', a, b, op };
-  // 减一个数 = 加它的相反数
-  const moveDesc =
-    op === '+'
-      ? b >= 0
-        ? `加上正数 ${b}，向右移动 ${b} 格`
-        : `加上负数 ${b}，向左移动 ${Math.abs(b)} 格`
-      : b >= 0
-        ? `减去正数 ${b}，向左移动 ${b} 格`
-        : `减去负数 ${b}（等于加 ${Math.abs(b)}），向右移动 ${Math.abs(b)} 格`;
+  const move = op === '+' ? b : -b; // 数轴上实际移动（带符号）：右为正、左为负
+  const dirText = move > 0 ? '向右' : move < 0 ? '向左' : '原地不动';
 
   return (
     <div className="demo">
@@ -40,17 +33,26 @@ export default function NumberLineDemo() {
       </div>
 
       <div className="formula mt16">
-        <div className="formula-title">这一步在数轴上怎么走</div>
+        <div className="formula-title">一步一步看怎么走</div>
         <div className="formula-main">({a}) {op} ({b}) = {result}</div>
-        <div className="formula-calc">{moveDesc}。</div>
+        <ol className="step-list">
+          <li>先站在起点 <b style={{ color: 'var(--blue)' }}>{a}</b>。</li>
+          <li>这次要{op === '+' ? '加上' : '减去'} {b}。</li>
+          {op === '-' && (
+            <li className="tip">减去 {b} = 加上它的相反数 {-b}（减一个数，就是加它的相反数）。</li>
+          )}
+          <li>所以{dirText}{move !== 0 ? <> 走 <b>{Math.abs(move)}</b> 格</> : ''}。</li>
+          <li>走到 <b style={{ color: 'var(--green)' }}>{result}</b>，这就是结果。</li>
+        </ol>
       </div>
 
       <div className="teacher">
         <div className="teacher-ico">👩‍🏫</div>
         <div>
-          有理数加减就是在数轴上"走步"：<b>加正数往右走、加负数往左走</b>。
-          减法先变成加法——<b>减去一个数 = 加上它的相反数</b>，比如 减去 −3 就等于 加 3，要往右走。
-          看着橙色箭头的方向，正负号就不容易错了。
+          数轴上做加减，就是从起点“走一步”：<br />
+          <b>加正数 → 往右走；加负数 → 往左走。</b><br />
+          减法先换句话说：<b>减去一个数 = 加上它的相反数</b>。比如减去 −3，就是加 3，要往右走。<br />
+          盯着橙色箭头的方向，正负号就不会搞错啦。
         </div>
       </div>
 

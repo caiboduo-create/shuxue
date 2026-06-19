@@ -65,9 +65,8 @@ export default function SpinnerDemo() {
       <div className="teacher">
         <div className="teacher-ico">👩‍🏫</div>
         <div>
-          概率就是"中目标的可能性"，等于 <b>目标份数 ÷ 总份数</b>。
-          某种颜色的份数越多，扇区越大，转到它的概率就越大。算出来的分数别忘了<b>约成最简</b>，
-          比如 {fav}/{total} {simp !== `${fav}/${total}` ? `可以约成 ${simp}` : '已经是最简了'}。
+          概率 = <b>目标份数 ÷ 总份数</b>。某种颜色份数越多、扇区越大，转到它的机会就越大。<br />
+          算出的分数记得<b>约成最简</b>：{fav}/{total} {simp !== `${fav}/${total}` ? `= ${simp}` : '已经是最简'}。
         </div>
       </div>
 

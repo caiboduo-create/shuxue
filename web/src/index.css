@@ -263,6 +263,11 @@ button { font-family: var(--body); cursor: pointer; }
   border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer;
 }
 
+/* 分步讲解小列表（数轴等 Demo 用） */
+.step-list { margin: 10px 0 0; padding-left: 22px; line-height: 1.9; font-size: 15px; }
+.step-list li { margin: 3px 0; }
+.step-list .tip { list-style: none; margin-left: -22px; background: var(--amber-wash); border: 1px dashed #f0c674; border-radius: 8px; padding: 5px 10px; color: #b45309; font-weight: 600; }
+
 /* 实时公式卡 */
 .formula { background: var(--blue-wash); border: 1px solid #d7e2f8; border-radius: 14px; padding: 14px 16px; }
 .formula-title { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
