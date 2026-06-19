@@ -180,6 +180,70 @@ function PointsFigure({ ax, ay, bx, by, legs }) {
   );
 }
 
+// 点到直线图：第一象限网格 + 直线 + 点 P + 到直线的垂线段（虚线，即距离）
+function PointLineFigure({ a, b, c, x0, y0, maxC }) {
+  const m = maxC || Math.max(x0, y0, 6);
+  const scale = Math.min(220 / m, 26);
+  const pad = 30;
+  const gp = m * scale;
+  const W = gp + pad * 2;
+  const H = gp + pad * 2;
+  const px = (x) => pad + x * scale;
+  const py = (y) => H - pad - y * scale;
+
+  const grid = [];
+  for (let i = 0; i <= m; i++) {
+    grid.push(<line key={`gx${i}`} x1={px(i)} y1={py(0)} x2={px(i)} y2={py(m)} stroke={C.faint} strokeWidth="1" />);
+    grid.push(<line key={`gy${i}`} x1={px(0)} y1={py(i)} x2={px(m)} y2={py(i)} stroke={C.faint} strokeWidth="1" />);
+  }
+
+  // 直线与网格边框 [0,m]×[0,m] 的交点，取两个不同的点画线段
+  const hits = [];
+  if (b !== 0) {
+    const yL = -c / b;
+    if (yL >= 0 && yL <= m) hits.push([0, yL]);
+    const yR = -(a * m + c) / b;
+    if (yR >= 0 && yR <= m) hits.push([m, yR]);
+  }
+  if (a !== 0) {
+    const xB = -c / a;
+    if (xB >= 0 && xB <= m) hits.push([xB, 0]);
+    const xT = -(b * m + c) / a;
+    if (xT >= 0 && xT <= m) hits.push([xT, m]);
+  }
+  const ends = [];
+  for (const p of hits) {
+    if (!ends.some((q) => Math.abs(q[0] - p[0]) < 1e-6 && Math.abs(q[1] - p[1]) < 1e-6)) ends.push(p);
+    if (ends.length === 2) break;
+  }
+
+  // 垂足：把点 P 投影到直线上
+  const denom = a * a + b * b;
+  const n = a * x0 + b * y0 + c;
+  const fx = x0 - (n * a) / denom;
+  const fy = y0 - (n * b) / denom;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: Math.max(W, 220) }}>
+      {grid}
+      {/* 坐标轴 */}
+      <line x1={px(0)} y1={py(0)} x2={px(m)} y2={py(0)} stroke={C.ink} strokeWidth="1.5" />
+      <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(m)} stroke={C.ink} strokeWidth="1.5" />
+      {/* 直线 */}
+      {ends.length === 2 && (
+        <line x1={px(ends[0][0])} y1={py(ends[0][1])} x2={px(ends[1][0])} y2={py(ends[1][1])} stroke={C.blue} strokeWidth="3" />
+      )}
+      {/* 垂线段（即点到直线的距离） */}
+      <line x1={px(x0)} y1={py(y0)} x2={px(fx)} y2={py(fy)} stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" />
+      {/* 垂足与点 P */}
+      <circle cx={px(fx)} cy={py(fy)} r="3.5" fill={C.amber} />
+      <circle cx={px(x0)} cy={py(y0)} r="5" fill={C.blue} />
+      <text x={px(x0) + 7} y={py(y0) - 8} fill={C.ink} fontSize="13" fontWeight="700">P({x0},{y0})</text>
+      <text x="50%" y={H - 6} textAnchor="middle" fill="#94a3b8" fontSize="13">虚线为 P 到直线的垂线段（即距离）</text>
+    </svg>
+  );
+}
+
 export default function GeometrySVG({ visual }) {
   if (!visual) return null;
   let inner = null;
@@ -188,6 +252,7 @@ export default function GeometrySVG({ visual }) {
   else if (visual.kind === 'rect') inner = <RectFigure {...visual} />;
   else if (visual.kind === 'symmetry') inner = <SymmetryFigure shape={visual.shape} />;
   else if (visual.kind === 'points') inner = <PointsFigure {...visual} />;
+  else if (visual.kind === 'point-line') inner = <PointLineFigure {...visual} />;
   else return null;
   return <div className="geo-wrap">{inner}</div>;
 }

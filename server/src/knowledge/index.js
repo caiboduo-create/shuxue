@@ -13,6 +13,7 @@ import rationalOps from './topics/rational-ops.js';
 import probability from './topics/probability-basic.js';
 import symmetryAxis from './topics/symmetry-axis.js';
 import distancePoints from './topics/distance-points.js';
+import distancePointLine from './topics/distance-point-line.js';
 
 const TOPICS = [
   addSub,
@@ -26,6 +27,7 @@ const TOPICS = [
   probability,
   symmetryAxis,
   distancePoints,
+  distancePointLine,
 ];
 
 const byId = new Map(TOPICS.map((t) => [t.id, t]));
