@@ -10,6 +10,7 @@ const round2 = (v) => Math.round(v * 100) / 100;
 
 export default {
   id: 'circle-measure',
+  objective: '掌握圆的面积 πr² 与周长 2πr（π 取 3.14）。',
   title: '圆的面积与周长',
   category: '图形与几何',
   grades: [6],

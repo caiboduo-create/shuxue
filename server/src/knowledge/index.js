@@ -55,6 +55,7 @@ export function listTopics(grade) {
     category: t.category,
     grades: t.grades,
     difficulties: t.difficulties,
+    objective: t.objective || '',
   }));
 }
 

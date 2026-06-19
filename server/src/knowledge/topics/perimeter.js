@@ -3,6 +3,7 @@ import { randInt, pick } from '../util.js';
 // 长方形 / 正方形的周长（小学 3 年级）
 export default {
   id: 'perimeter',
+  objective: '理解周长的含义，会算长方形和正方形的周长。',
   title: '长方形和正方形的周长',
   category: '图形与几何',
   grades: [3, 4],

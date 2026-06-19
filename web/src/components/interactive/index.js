@@ -6,6 +6,11 @@ import AngleDemo from './AngleDemo.jsx';
 import LineTypeDemo from './LineTypeDemo.jsx';
 import SymmetryDemo from './SymmetryDemo.jsx';
 import DistanceDemo from './DistanceDemo.jsx';
+import CircleDemo from './CircleDemo.jsx';
+import TriangleDemo from './TriangleDemo.jsx';
+import LinearFunctionDemo from './LinearFunctionDemo.jsx';
+import RectangleDemo from './RectangleDemo.jsx';
+import FractionDemo from './FractionDemo.jsx';
 
 export const INTERACTIVE = [
   {
@@ -57,6 +62,56 @@ export const INTERACTIVE = [
     grades: [8],
     topicId: 'distance-points',
     Component: DistanceDemo,
+  },
+  {
+    id: 'rectangle',
+    title: '长方形面积与周长',
+    subtitle: '调长和宽，看面积、周长怎么变',
+    emoji: '🟦',
+    category: '图形与几何',
+    grades: [3, 4],
+    topicId: 'area-rect',
+    Component: RectangleDemo,
+  },
+  {
+    id: 'circle',
+    title: '圆的面积与周长',
+    subtitle: '拖半径，圆实时变大变小',
+    emoji: '⭕',
+    category: '图形与几何',
+    grades: [6],
+    topicId: 'circle-measure',
+    Component: CircleDemo,
+  },
+  {
+    id: 'triangle',
+    title: '三角形内角和',
+    subtitle: '调两个角，看第三个角和形状变化',
+    emoji: '🔺',
+    category: '图形与几何',
+    grades: [4, 7],
+    topicId: 'triangle-angle-sum',
+    Component: TriangleDemo,
+  },
+  {
+    id: 'linear-function',
+    title: '一次函数 y=kx+b',
+    subtitle: '调 k、b，直线实时变化',
+    emoji: '📈',
+    category: '函数图像',
+    grades: [8],
+    topicId: 'linear-function',
+    Component: LinearFunctionDemo,
+  },
+  {
+    id: 'fraction',
+    title: '分数的比较与加减',
+    subtitle: '改分子分母，方格图直观看分数',
+    emoji: '🍰',
+    category: '数与代数',
+    grades: [3, 4, 5],
+    topicId: 'fraction-visual',
+    Component: FractionDemo,
   },
 ];
 

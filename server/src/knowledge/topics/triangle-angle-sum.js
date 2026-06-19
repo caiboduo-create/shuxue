@@ -5,6 +5,7 @@ import { randInt } from '../util.js';
 // 参数随机生成两个角，保证三个角都是合理正整数（每个角 ≥ 20°），图示按真实角度绘制。
 export default {
   id: 'triangle-angle-sum',
+  objective: '理解三角形内角和是 180°，会求未知的内角。',
   title: '三角形的内角和',
   category: '图形与几何',
   grades: [4, 7],

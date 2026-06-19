@@ -23,6 +23,7 @@ function range(difficulty) {
 
 export default {
   id: 'add-sub',
+  objective: '掌握整数加法和减法，并能解决简单的生活问题。',
   title: '整数加减法',
   category: '数与运算',
   grades: [1, 2, 3],

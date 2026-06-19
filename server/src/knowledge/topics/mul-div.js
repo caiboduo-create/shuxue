@@ -14,6 +14,7 @@ const STEMS_DIV = [
 
 export default {
   id: 'mul-div',
+  objective: '理解乘法和除法的意义，熟练口算并会应用。',
   title: '乘法与除法',
   category: '数与运算',
   grades: [2, 3, 4],

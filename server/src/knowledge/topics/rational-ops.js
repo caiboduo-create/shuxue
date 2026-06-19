@@ -7,6 +7,7 @@ function fmt(n) {
 
 export default {
   id: 'rational-ops',
+  objective: '掌握有理数的加减运算，重点突破正负号。',
   title: '有理数加减运算',
   category: '数与运算',
   grades: [7],

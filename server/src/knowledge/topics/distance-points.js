@@ -14,6 +14,7 @@ const TRIPLES = [
 
 export default {
   id: 'distance-points',
+  objective: '用勾股定理求平面直角坐标系中两点间的距离。',
   title: '平面直角坐标系中两点间的距离',
   category: '图形与几何',
   grades: [8],

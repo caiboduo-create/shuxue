@@ -14,6 +14,7 @@ function formatFn(k, b) {
 
 export default {
   id: 'linear-function',
+  objective: '理解 k 是斜率、b 是截距，会求一次函数的函数值。',
   title: '一次函数 y = kx + b',
   category: '方程与代数',
   grades: [8],

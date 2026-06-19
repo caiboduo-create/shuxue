@@ -25,6 +25,7 @@ function formatLine(a, b, c) {
 
 export default {
   id: 'distance-point-line',
+  objective: '用点到直线距离公式，求一个点到直线的距离。',
   title: '点到直线的距离',
   category: '图形与几何',
   grades: [8, 9],

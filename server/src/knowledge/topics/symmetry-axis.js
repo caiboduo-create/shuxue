@@ -22,6 +22,7 @@ function buildOptions(correctLabel) {
 
 export default {
   id: 'symmetry-axis',
+  objective: '认识轴对称，会数常见图形的对称轴条数。',
   title: '轴对称图形的对称轴',
   category: '图形与几何',
   grades: [4, 5],

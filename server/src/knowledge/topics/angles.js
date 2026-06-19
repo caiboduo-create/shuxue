@@ -12,6 +12,7 @@ function classify(deg) {
 
 export default {
   id: 'angles',
+  objective: '认识锐角、直角、钝角、平角，会按度数给角分类。',
   title: '角的度量与分类',
   category: '图形与几何',
   grades: [4, 5],

@@ -38,6 +38,7 @@ const coef = (theta, r) => round2((theta / 360) * r * r);
 
 export default {
   id: 'sector-area',
+  objective: '理解扇形是圆的一部分，会用 S=(θ/360)πr² 算面积。',
   title: '扇形的面积',
   category: '图形与几何',
   grades: [6, 9],

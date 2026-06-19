@@ -9,6 +9,7 @@ import { simplifyFraction } from '../util.js';
 // 答案不下发前端；solve 用 params 重新计算（比较返回 correctValue，加减返回 answer 分数文本）。
 export default {
   id: 'fraction-visual',
+  objective: '会比较分数大小，会做同分母分数的加减。',
   title: '分数的比较与加减',
   category: '数与运算',
   grades: [3, 4, 5],

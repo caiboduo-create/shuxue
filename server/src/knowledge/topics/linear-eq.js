@@ -11,6 +11,7 @@ const STEMS = [
 
 export default {
   id: 'linear-eq',
+  objective: '会用移项和系数化一，解一元一次方程。',
   title: '一元一次方程',
   category: '方程与代数',
   grades: [7],

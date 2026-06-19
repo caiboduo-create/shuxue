@@ -244,9 +244,10 @@ function PointLineFigure({ a, b, c, x0, y0, maxC }) {
   );
 }
 
-// 圆：画出圆并标出半径或直径（圆的面积/周长题配图）
+// 圆：画出圆并标出半径或直径（圆的面积/周长题配图）。
+// 屏幕半径随 r 平滑缩放并夹在范围内，这样互动课件里拖动 r 时圆会明显变大变小。
 function CircleFigure({ r, given, givenValue }) {
-  const R = 70; // 屏幕固定显示半径，避免大圆超框
+  const R = Math.max(26, Math.min(92, r * 8));
   const cx = 110;
   const cy = 100;
   return (

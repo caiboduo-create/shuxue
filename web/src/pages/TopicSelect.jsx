@@ -3,6 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { getDemoByTopic } from '../components/interactive/index.js';
 
+const gradeLabel = (g) => (g <= 6 ? `${g}年级` : `初${g - 6}`);
+
 export default function TopicSelect() {
   const { grade } = useParams();
   const [topics, setTopics] = useState([]);
@@ -54,14 +56,19 @@ export default function TopicSelect() {
               return (
                 <button
                   key={t.id}
-                  className="pick-card"
+                  className="pick-card topic-card"
                   onClick={() => nav(demo ? `/interactive/${demo.id}` : `/quiz/${t.id}`)}
                 >
                   <div className="pc-title">{t.title}</div>
-                  <div className="pc-sub">
-                    {demo ? '先玩互动演示，再练习' : `${t.difficulties.length} 个难度 · 点击开始`}
+                  <div className="row wrap" style={{ gap: 6 }}>
+                    {t.grades.map((g) => (
+                      <span key={g} className="badge grey">{gradeLabel(g)}</span>
+                    ))}
                   </div>
-                  {demo && <span className="badge mt8" style={{ alignSelf: 'flex-start' }}>🎮 含互动课件</span>}
+                  {t.objective && <div className="pc-sub topic-goal">🎯 {t.objective}</div>}
+                  <div className="topic-foot">
+                    {demo ? '🎮 含互动课件 · 先演示再练习' : `${t.difficulties.length} 个难度 · 点击开始`}
+                  </div>
                 </button>
               );
             })}
