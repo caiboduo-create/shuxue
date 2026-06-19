@@ -11,6 +11,8 @@ import areaRect from './topics/area-rect.js';
 import linearEq from './topics/linear-eq.js';
 import rationalOps from './topics/rational-ops.js';
 import probability from './topics/probability-basic.js';
+import symmetryAxis from './topics/symmetry-axis.js';
+import distancePoints from './topics/distance-points.js';
 
 const TOPICS = [
   addSub,
@@ -22,6 +24,8 @@ const TOPICS = [
   linearEq,
   rationalOps,
   probability,
+  symmetryAxis,
+  distancePoints,
 ];
 
 const byId = new Map(TOPICS.map((t) => [t.id, t]));
