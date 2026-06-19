@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { weakestTopic } from '../lib/store.js';
+import { INTERACTIVE } from '../components/interactive/index.js';
 
 export default function Home() {
   const nav = useNavigate();
@@ -24,8 +25,8 @@ export default function Home() {
           几何题还会画出图形，帮你真正看懂。
         </p>
         <div className="row wrap mt24">
-          <Link to="/grades" className="btn btn-primary">开始练习 →</Link>
-          <Link to="/wrong" className="btn btn-ghost">看看错题本</Link>
+          <Link to="/interactive" className="btn btn-primary">玩互动课件 →</Link>
+          <Link to="/grades" className="btn btn-ghost">直接去练习</Link>
         </div>
         {meta && (
           <p className="muted mt16" style={{ fontSize: 13 }}>
@@ -49,6 +50,22 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <section className="mt24">
+        <div className="row between wrap" style={{ marginBottom: 12 }}>
+          <h3>🎮 互动课件 · 拖一拖就懂</h3>
+          <Link to="/interactive" className="muted" style={{ fontSize: 14 }}>全部课件 →</Link>
+        </div>
+        <div className="grid-cards">
+          {INTERACTIVE.slice(0, 3).map((d) => (
+            <button key={d.id} className="pick-card demo-card" onClick={() => nav(`/interactive/${d.id}`)}>
+              <div className="demo-emoji">{d.emoji}</div>
+              <div className="pc-title">{d.title}</div>
+              <div className="pc-sub">{d.subtitle}</div>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="mt24">
         <h3 style={{ marginBottom: 12 }}>它能帮到谁</h3>

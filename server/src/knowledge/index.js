@@ -14,6 +14,7 @@ import probability from './topics/probability-basic.js';
 import symmetryAxis from './topics/symmetry-axis.js';
 import distancePoints from './topics/distance-points.js';
 import distancePointLine from './topics/distance-point-line.js';
+import sectorArea from './topics/sector-area.js';
 
 const TOPICS = [
   addSub,
@@ -28,6 +29,7 @@ const TOPICS = [
   symmetryAxis,
   distancePoints,
   distancePointLine,
+  sectorArea,
 ];
 
 const byId = new Map(TOPICS.map((t) => [t.id, t]));

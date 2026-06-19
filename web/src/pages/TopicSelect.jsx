@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import { getDemoByTopic } from '../components/interactive/index.js';
 
 export default function TopicSelect() {
   const { grade } = useParams();
@@ -48,12 +49,22 @@ export default function TopicSelect() {
         <section key={cat} className="mt24">
           <div className="badge">{cat}</div>
           <div className="grid-cards mt12">
-            {list.map((t) => (
-              <button key={t.id} className="pick-card" onClick={() => nav(`/quiz/${t.id}`)}>
-                <div className="pc-title">{t.title}</div>
-                <div className="pc-sub">{t.difficulties.length} 个难度 · 点击开始</div>
-              </button>
-            ))}
+            {list.map((t) => {
+              const demo = getDemoByTopic(t.id);
+              return (
+                <button
+                  key={t.id}
+                  className="pick-card"
+                  onClick={() => nav(demo ? `/interactive/${demo.id}` : `/quiz/${t.id}`)}
+                >
+                  <div className="pc-title">{t.title}</div>
+                  <div className="pc-sub">
+                    {demo ? '先玩互动演示，再练习' : `${t.difficulties.length} 个难度 · 点击开始`}
+                  </div>
+                  {demo && <span className="badge mt8" style={{ alignSelf: 'flex-start' }}>🎮 含互动课件</span>}
+                </button>
+              );
+            })}
           </div>
         </section>
       ))}

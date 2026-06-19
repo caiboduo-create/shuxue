@@ -5,6 +5,8 @@ import TopicSelect from './pages/TopicSelect.jsx';
 import Quiz from './pages/Quiz.jsx';
 import WrongBook from './pages/WrongBook.jsx';
 import Progress from './pages/Progress.jsx';
+import Interactive from './pages/Interactive.jsx';
+import InteractiveDemo from './pages/InteractiveDemo.jsx';
 
 function TopBar() {
   return (
@@ -14,6 +16,9 @@ function TopBar() {
         <span>数学小课堂</span>
       </Link>
       <span className="spacer" />
+      <NavLink to="/interactive" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
+        互动课件
+      </NavLink>
       <NavLink to="/grades" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
         练习
       </NavLink>
@@ -34,6 +39,8 @@ export default function App() {
       <main className="container">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/interactive" element={<Interactive />} />
+          <Route path="/interactive/:demoId" element={<InteractiveDemo />} />
           <Route path="/grades" element={<GradeSelect />} />
           <Route path="/grade/:grade" element={<TopicSelect />} />
           <Route path="/quiz/:topicId" element={<Quiz />} />
