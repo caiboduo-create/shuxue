@@ -244,6 +244,165 @@ function PointLineFigure({ a, b, c, x0, y0, maxC }) {
   );
 }
 
+// 圆：画出圆并标出半径或直径（圆的面积/周长题配图）
+function CircleFigure({ r, given, givenValue }) {
+  const R = 70; // 屏幕固定显示半径，避免大圆超框
+  const cx = 110;
+  const cy = 100;
+  return (
+    <svg viewBox="0 0 220 200" width="100%" style={{ maxWidth: 280 }}>
+      <circle cx={cx} cy={cy} r={R} fill="#eff5ff" stroke={C.blue} strokeWidth="2.5" />
+      <circle cx={cx} cy={cy} r="3.5" fill={C.ink} />
+      {given === 'diameter' ? (
+        <>
+          <line x1={cx - R} y1={cy} x2={cx + R} y2={cy} stroke={C.amber} strokeWidth="2.5" />
+          <text x={cx} y={cy - 10} textAnchor="middle" fill="#b45309" fontSize="14" fontWeight="700">直径 {givenValue}</text>
+        </>
+      ) : (
+        <>
+          <line x1={cx} y1={cy} x2={cx + R} y2={cy} stroke={C.amber} strokeWidth="2.5" />
+          <text x={cx + R / 2} y={cy - 10} textAnchor="middle" fill="#b45309" fontSize="14" fontWeight="700">r = {givenValue}</text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+// 三角形：按给定的三个内角真实绘制，并标出每个角的度数
+function TriangleFigure({ angles }) {
+  const [a, b, c] = angles;
+  const ra = (a * Math.PI) / 180;
+  const rb = (b * Math.PI) / 180;
+  // 底边 AB 在水平线上，A 在左、B 在右；用两角求顶点 C（数学坐标，y 向上）
+  const L = 1;
+  const cxMath = (L * Math.tan(rb)) / (Math.tan(ra) + Math.tan(rb));
+  const cyMath = Math.tan(ra) * cxMath;
+  // 归一化到画布
+  const pts = [
+    [0, 0],
+    [L, 0],
+    [cxMath, cyMath],
+  ];
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const maxY = Math.max(...ys);
+  const pad = 34;
+  const w = 240;
+  const scale = (w - pad * 2) / (maxX - minX);
+  const h = maxY * scale + pad * 2;
+  // 转屏幕坐标（y 翻转）
+  const sp = pts.map(([x, y]) => [pad + (x - minX) * scale, h - pad - y * scale]);
+  const [A, B, Cc] = sp;
+  // 角标签放在顶点稍微往三角形内部
+  const cxc = (A[0] + B[0] + Cc[0]) / 3;
+  const cyc = (A[1] + B[1] + Cc[1]) / 3;
+  const lbl = (P, deg) => {
+    const dx = cxc - P[0];
+    const dy = cyc - P[1];
+    const len = Math.hypot(dx, dy) || 1;
+    return [P[0] + (dx / len) * 26, P[1] + (dy / len) * 26 + 4];
+  };
+  const la = lbl(A, a);
+  const lb = lbl(B, b);
+  const lc = lbl(Cc, c);
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ maxWidth: 320 }}>
+      <polygon points={sp.map((p) => p.join(',')).join(' ')} fill="#eff5ff" stroke={C.blue} strokeWidth="2.5" />
+      <text x={la[0]} y={la[1]} textAnchor="middle" fill={C.ink} fontSize="13" fontWeight="700">{a}°</text>
+      <text x={lb[0]} y={lb[1]} textAnchor="middle" fill={C.ink} fontSize="13" fontWeight="700">{b}°</text>
+      <text x={lc[0]} y={lc[1]} textAnchor="middle" fill="#b45309" fontSize="13" fontWeight="700">?</text>
+    </svg>
+  );
+}
+
+// 一次函数：坐标系 + 直线 y=kx+b + 标出点 (x, kx+b)
+function LinearGraphFigure({ k, b, x }) {
+  const span = 6; // 坐标范围 [-span, span]
+  const cell = 18;
+  const O = span * cell;
+  const W = O * 2;
+  const px = (vx) => O + vx * cell;
+  const py = (vy) => O - vy * cell;
+  const clampV = (v) => Math.max(-span, Math.min(span, v));
+  // 直线在可视范围内的两个端点
+  const x1 = -span;
+  const x2 = span;
+  const y1 = clampV(k * x1 + b);
+  const y2 = clampV(k * x2 + b);
+  const y = k * x + b;
+  const grid = [];
+  for (let i = -span; i <= span; i++) {
+    grid.push(<line key={`v${i}`} x1={px(i)} y1={py(-span)} x2={px(i)} y2={py(span)} stroke={C.faint} strokeWidth={i === 0 ? 0 : 1} />);
+    grid.push(<line key={`h${i}`} x1={px(-span)} y1={py(i)} x2={px(span)} y2={py(i)} stroke={C.faint} strokeWidth={i === 0 ? 0 : 1} />);
+  }
+  const showPoint = Math.abs(x) <= span && Math.abs(y) <= span;
+  return (
+    <svg viewBox={`0 0 ${W} ${W}`} width="100%" style={{ maxWidth: 300 }}>
+      {grid}
+      <line x1={px(-span)} y1={py(0)} x2={px(span)} y2={py(0)} stroke={C.ink} strokeWidth="1.5" />
+      <line x1={px(0)} y1={py(-span)} x2={px(0)} y2={py(span)} stroke={C.ink} strokeWidth="1.5" />
+      <line x1={px(x1)} y1={py(y1)} x2={px(x2)} y2={py(y2)} stroke={C.blue} strokeWidth="3" />
+      {showPoint && (
+        <>
+          <line x1={px(x)} y1={py(0)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1={px(0)} y1={py(y)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
+          <circle cx={px(x)} cy={py(y)} r="5" fill={C.amber} />
+          <text x={px(x) + 7} y={py(y) - 7} fill="#b45309" fontSize="12" fontWeight="700">({x}, {y})</text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+// 分数：用方格条形图显示分数。compare 显示两条对比，op 显示两条 + 运算符
+function FractionBar({ n, d, x, y, w, h }) {
+  const cw = w / d;
+  const cells = [];
+  for (let i = 0; i < d; i++) {
+    cells.push(
+      <rect
+        key={i}
+        x={x + i * cw}
+        y={y}
+        width={cw}
+        height={h}
+        fill={i < n ? '#bcd3ff' : '#fff'}
+        stroke={C.blue}
+        strokeWidth="1.2"
+      />
+    );
+  }
+  return (
+    <g>
+      {cells}
+      <text x={x + w + 10} y={y + h / 2 + 5} fill={C.ink} fontSize="15" fontWeight="700">{n}/{d}</text>
+    </g>
+  );
+}
+
+function FractionFigure({ layout, op, a, b }) {
+  const W = 260;
+  const barW = 150;
+  if (layout === 'op') {
+    return (
+      <svg viewBox={`0 0 ${W} 120`} width="100%" style={{ maxWidth: 300 }}>
+        <FractionBar n={a.n} d={a.d} x={14} y={16} w={barW} h={30} />
+        <text x={W / 2 - 16} y={78} textAnchor="middle" fill={C.ink} fontSize="22" fontWeight="800">{op}</text>
+        <FractionBar n={b.n} d={b.d} x={14} y={70} w={barW} h={30} />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox={`0 0 ${W} 120`} width="100%" style={{ maxWidth: 300 }}>
+      <FractionBar n={a.n} d={a.d} x={14} y={20} w={barW} h={30} />
+      <text x={W / 2 + 32} y={72} textAnchor="middle" fill={C.ink} fontSize="20" fontWeight="800">?</text>
+      <FractionBar n={b.n} d={b.d} x={14} y={66} w={barW} h={30} />
+    </svg>
+  );
+}
+
 export default function GeometrySVG({ visual }) {
   if (!visual) return null;
   let inner = null;
@@ -253,6 +412,10 @@ export default function GeometrySVG({ visual }) {
   else if (visual.kind === 'symmetry') inner = <SymmetryFigure shape={visual.shape} />;
   else if (visual.kind === 'points') inner = <PointsFigure {...visual} />;
   else if (visual.kind === 'point-line') inner = <PointLineFigure {...visual} />;
+  else if (visual.kind === 'circle') inner = <CircleFigure {...visual} />;
+  else if (visual.kind === 'triangle') inner = <TriangleFigure {...visual} />;
+  else if (visual.kind === 'linear-graph') inner = <LinearGraphFigure {...visual} />;
+  else if (visual.kind === 'fraction') inner = <FractionFigure {...visual} />;
   else return null;
   return <div className="geo-wrap">{inner}</div>;
 }

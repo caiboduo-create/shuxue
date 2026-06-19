@@ -15,6 +15,10 @@ import symmetryAxis from './topics/symmetry-axis.js';
 import distancePoints from './topics/distance-points.js';
 import distancePointLine from './topics/distance-point-line.js';
 import sectorArea from './topics/sector-area.js';
+import circleMeasure from './topics/circle-measure.js';
+import triangleAngleSum from './topics/triangle-angle-sum.js';
+import linearFunction from './topics/linear-function.js';
+import fractionVisual from './topics/fraction-visual.js';
 
 const TOPICS = [
   addSub,
@@ -30,6 +34,10 @@ const TOPICS = [
   distancePoints,
   distancePointLine,
   sectorArea,
+  circleMeasure,
+  triangleAngleSum,
+  linearFunction,
+  fractionVisual,
 ];
 
 const byId = new Map(TOPICS.map((t) => [t.id, t]));
