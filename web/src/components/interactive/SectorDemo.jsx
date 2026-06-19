@@ -6,7 +6,7 @@ import { useSvgDrag, clamp, round2 } from './svgutil.js';
 // 扇形面积互动演示：拖半径 r、拖圆心角 θ，扇形实时变化，公式与结果实时更新。
 const CX = 160;
 const CY = 150;
-const SCALE = 11; // 每单位半径对应的像素
+const SCALE = 8; // 每单位半径对应的像素（半径范围增大后调小，保证大圆不超框）
 
 export default function SectorDemo() {
   const svgRef = useRef(null);
@@ -26,7 +26,7 @@ export default function SectorDemo() {
 
   // 拖半径手柄（沿起边水平拖动）
   const onDragR = useCallback((p) => {
-    setR(clamp(Math.round((p.x - CX) / SCALE), 1, 10));
+    setR(clamp(Math.round((p.x - CX) / SCALE), 1, 15));
   }, []);
   // 拖角度手柄（绕圆心旋转）
   const onDragTheta = useCallback((p) => {
@@ -73,7 +73,7 @@ export default function SectorDemo() {
 
         <div className="demo-side">
           <div className="demo-controls">
-            <Slider label="半径 r" value={r} min={1} max={10} unit=" cm" onChange={setR} />
+            <Slider label="半径 r" value={r} min={1} max={15} unit=" cm" onChange={setR} />
             <Slider label="圆心角 θ" value={theta} min={0} max={360} step={5} unit="°" onChange={setTheta} />
           </div>
 

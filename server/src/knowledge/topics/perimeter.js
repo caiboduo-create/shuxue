@@ -10,7 +10,7 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const max = difficulty === 'easy' ? 10 : difficulty === 'hard' ? 50 : 20;
+    const max = difficulty === 'easy' ? 40 : difficulty === 'hard' ? 250 : 120;
     const unit = '厘米';
     const shape = pick(['rect', 'square']);
     if (shape === 'square') {

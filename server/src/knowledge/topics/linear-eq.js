@@ -18,18 +18,21 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    let a, x;
+    // 解 x 与常数项整体增大并分档（解仍为整数）
+    let a, x, b;
     if (difficulty === 'easy') {
-      a = randInt(1, 5);
-      x = randInt(1, 9);
+      a = randInt(1, 6);
+      x = randInt(1, 30);
+      b = randInt(-20, 20);
     } else if (difficulty === 'hard') {
-      a = pick([-6, -5, -4, -3, 3, 4, 5, 6]);
-      x = randInt(-9, 9);
+      a = pick([-9, -8, -7, -6, -5, -4, -3, 3, 4, 5, 6, 7, 8, 9]);
+      x = randInt(-60, 60);
+      b = randInt(-120, 120);
     } else {
-      a = randInt(2, 8);
-      x = randInt(-5, 9);
+      a = randInt(2, 9);
+      x = randInt(-30, 40);
+      b = randInt(-60, 60);
     }
-    const b = randInt(-12, 12);
     const c = a * x + b;
     const bSign = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
     const eq = `${a}x ${bSign} = ${c}`;

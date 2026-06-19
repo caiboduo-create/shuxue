@@ -24,18 +24,19 @@ export default {
     let k;
     let b;
     let x;
+    // 斜率保持适中（太大图线会过陡），主要放大 b（截距）与 x（自变量）
     if (difficulty === 'easy') {
       k = pick([1, 2, 3]); // 正斜率，便于看图
-      b = randInt(0, 5);
-      x = randInt(1, 5);
+      b = randInt(0, 15);
+      x = randInt(1, 12);
     } else if (difficulty === 'hard') {
-      k = pick([-3, -2, 2, 3, 4]);
-      b = randInt(-6, 6);
-      x = randInt(-5, 5);
+      k = pick([-6, -5, -4, 4, 5, 6]);
+      b = randInt(-25, 25);
+      x = randInt(-18, 18);
     } else {
-      k = pick([-2, -1, 1, 2, 3]);
-      b = randInt(-4, 5);
-      x = randInt(-4, 5);
+      k = pick([-4, -3, -2, 2, 3, 4]);
+      b = randInt(-15, 15);
+      x = randInt(-12, 12);
     }
 
     return {

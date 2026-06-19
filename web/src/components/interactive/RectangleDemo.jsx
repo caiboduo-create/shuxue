@@ -23,8 +23,8 @@ export default function RectangleDemo() {
         </div>
         <div className="demo-side">
           <div className="demo-controls">
-            <Slider label="长" value={w} min={1} max={15} unit=" cm" onChange={setW} />
-            <Slider label="宽" value={h} min={1} max={15} unit=" cm" onChange={setH} />
+            <Slider label="长" value={w} min={1} max={50} unit=" cm" onChange={setW} />
+            <Slider label="宽" value={h} min={1} max={50} unit=" cm" onChange={setH} />
           </div>
           <div className="formula">
             <div className="formula-title">面积与周长</div>

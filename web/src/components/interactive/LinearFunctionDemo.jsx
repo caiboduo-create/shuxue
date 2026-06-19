@@ -32,9 +32,9 @@ export default function LinearFunctionDemo() {
         </div>
         <div className="demo-side">
           <div className="demo-controls">
-            <Slider label="斜率 k" value={k} min={-3} max={3} onChange={setK} />
-            <Slider label="截距 b" value={b} min={-6} max={6} onChange={setB} />
-            <Slider label="代入的 x" value={x} min={-5} max={5} onChange={setX} />
+            <Slider label="斜率 k" value={k} min={-6} max={6} onChange={setK} />
+            <Slider label="截距 b" value={b} min={-25} max={25} onChange={setB} />
+            <Slider label="代入的 x" value={x} min={-18} max={18} onChange={setX} />
           </div>
           <div className="formula">
             <div className="formula-title">一次函数</div>

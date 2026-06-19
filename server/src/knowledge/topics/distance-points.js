@@ -21,25 +21,28 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    let ax = randInt(0, 6);
-    let ay = randInt(0, 6);
+    // 起点和坐标差整体增大，但距离仍保持整数（易=轴向坐标差；中难=勾股数×放大倍数）
+    const baseMax = difficulty === 'hard' ? 6 : difficulty === 'medium' ? 9 : 12;
+    let ax = randInt(0, baseMax);
+    let ay = randInt(0, baseMax);
     let dx;
     let dy;
 
     if (difficulty === 'easy') {
       // 简单：横向或纵向，距离就是坐标差，整数
       if (pick([true, false])) {
-        dx = randInt(2, 8);
+        dx = randInt(3, 30);
         dy = 0;
       } else {
         dx = 0;
-        dy = randInt(2, 8);
+        dy = randInt(3, 30);
       }
     } else {
-      // 中等/困难：用勾股数，斜放，距离仍为整数
+      // 中等/困难：勾股数 × 放大倍数，斜放，距离仍为整数
+      const f = difficulty === 'hard' ? pick([2, 3]) : pick([1, 2]);
       const [a, b] = pick(TRIPLES);
-      dx = a;
-      dy = b;
+      dx = a * f;
+      dy = b * f;
     }
 
     const bx = ax + dx;

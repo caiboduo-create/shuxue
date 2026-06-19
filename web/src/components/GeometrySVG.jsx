@@ -83,7 +83,8 @@ function RectFigure({ w, h, unit, label, grid }) {
   const vbW = pw + pad * 2;
   const vbH = ph + pad * 2;
   const cells = [];
-  if (grid) {
+  // 只有单位格画得够大（≥12px）才画网格，避免数值很大时网格过密成一团
+  if (grid && scale >= 12) {
     for (let i = 1; i < w; i++)
       cells.push(<line key={`v${i}`} x1={pad + i * scale} y1={pad} x2={pad + i * scale} y2={pad + ph} stroke={C.faint} strokeWidth="1" />);
     for (let j = 1; j < h; j++)
@@ -149,7 +150,9 @@ function PointsFigure({ ax, ay, bx, by, legs }) {
   const px = (x) => pad + x * scale;
   const py = (y) => H - pad - y * scale;
   const grid = [];
-  for (let i = 0; i <= maxC; i++) {
+  // 坐标范围大时按步长画网格，避免线太密
+  const gstep = maxC > 16 ? Math.ceil(maxC / 12) : 1;
+  for (let i = 0; i <= maxC; i += gstep) {
     grid.push(<line key={`gx${i}`} x1={px(i)} y1={py(0)} x2={px(i)} y2={py(maxC)} stroke={C.faint} strokeWidth="1" />);
     grid.push(<line key={`gy${i}`} x1={px(0)} y1={py(i)} x2={px(maxC)} y2={py(i)} stroke={C.faint} strokeWidth="1" />);
   }
@@ -189,7 +192,8 @@ function PointLineFigure({ a, b, c, x0, y0, maxC }) {
   const py = (y) => H - pad - y * scale;
 
   const grid = [];
-  for (let i = 0; i <= m; i++) {
+  const gstep = m > 16 ? Math.ceil(m / 12) : 1;
+  for (let i = 0; i <= m; i += gstep) {
     grid.push(<line key={`gx${i}`} x1={px(i)} y1={py(0)} x2={px(i)} y2={py(m)} stroke={C.faint} strokeWidth="1" />);
     grid.push(<line key={`gy${i}`} x1={px(0)} y1={py(i)} x2={px(m)} y2={py(i)} stroke={C.faint} strokeWidth="1" />);
   }
@@ -316,40 +320,37 @@ function TriangleFigure({ angles }) {
 }
 
 // 一次函数：坐标系 + 直线 y=kx+b + 标出点 (x, kx+b)
+// 坐标范围按 k/b/x 自适应，保证点 (x, y) 与截距永远落在画面内（大数值也不裁切）。
 function LinearGraphFigure({ k, b, x }) {
-  const span = 6; // 坐标范围 [-span, span]
-  const cell = 18;
-  const O = span * cell;
-  const W = O * 2;
-  const px = (vx) => O + vx * cell;
-  const py = (vy) => O - vy * cell;
-  const clampV = (v) => Math.max(-span, Math.min(span, v));
-  // 直线在可视范围内的两个端点
-  const x1 = -span;
-  const x2 = span;
-  const y1 = clampV(k * x1 + b);
-  const y2 = clampV(k * x2 + b);
   const y = k * x + b;
+  // 自适应半轴范围：覆盖 x、y、b，并向上取整到偶数
+  const span = Math.max(6, Math.ceil(Math.max(Math.abs(x), Math.abs(y), Math.abs(b)) / 2) * 2);
+  const half = 118; // 画布半边像素
+  const O = half + 16; // 原点像素（留边距给标签）
+  const VB = O * 2;
+  const sc = half / span; // 每单位像素
+  const px = (vx) => O + vx * sc;
+  const py = (vy) => O - vy * sc;
+  const gstep = span > 12 ? Math.ceil(span / 6) : span > 6 ? 2 : 1;
   const grid = [];
-  for (let i = -span; i <= span; i++) {
-    grid.push(<line key={`v${i}`} x1={px(i)} y1={py(-span)} x2={px(i)} y2={py(span)} stroke={C.faint} strokeWidth={i === 0 ? 0 : 1} />);
-    grid.push(<line key={`h${i}`} x1={px(-span)} y1={py(i)} x2={px(span)} y2={py(i)} stroke={C.faint} strokeWidth={i === 0 ? 0 : 1} />);
+  for (let i = -span; i <= span; i += gstep) {
+    grid.push(<line key={`v${i}`} x1={px(i)} y1={py(-span)} x2={px(i)} y2={py(span)} stroke={C.faint} strokeWidth="1" />);
+    grid.push(<line key={`h${i}`} x1={px(-span)} y1={py(i)} x2={px(span)} y2={py(i)} stroke={C.faint} strokeWidth="1" />);
   }
-  const showPoint = Math.abs(x) <= span && Math.abs(y) <= span;
+  // 直线画满整个 x 范围；超出画布的部分由 SVG 视口自动裁掉，斜率始终正确
+  const lx1 = -span;
+  const lx2 = span;
+  const rightHalf = px(x) > O;
   return (
-    <svg viewBox={`0 0 ${W} ${W}`} width="100%" style={{ maxWidth: 300 }}>
+    <svg viewBox={`0 0 ${VB} ${VB}`} width="100%" style={{ maxWidth: 300 }}>
       {grid}
       <line x1={px(-span)} y1={py(0)} x2={px(span)} y2={py(0)} stroke={C.ink} strokeWidth="1.5" />
       <line x1={px(0)} y1={py(-span)} x2={px(0)} y2={py(span)} stroke={C.ink} strokeWidth="1.5" />
-      <line x1={px(x1)} y1={py(y1)} x2={px(x2)} y2={py(y2)} stroke={C.blue} strokeWidth="3" />
-      {showPoint && (
-        <>
-          <line x1={px(x)} y1={py(0)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
-          <line x1={px(0)} y1={py(y)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
-          <circle cx={px(x)} cy={py(y)} r="5" fill={C.amber} />
-          <text x={px(x) + (x >= span - 1 ? -7 : 7)} y={py(y) - 7} textAnchor={x >= span - 1 ? 'end' : 'start'} fill="#b45309" fontSize="12" fontWeight="700">({x}, {y})</text>
-        </>
-      )}
+      <line x1={px(lx1)} y1={py(k * lx1 + b)} x2={px(lx2)} y2={py(k * lx2 + b)} stroke={C.blue} strokeWidth="3" />
+      <line x1={px(x)} y1={py(0)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
+      <line x1={px(0)} y1={py(y)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
+      <circle cx={px(x)} cy={py(y)} r="5" fill={C.amber} />
+      <text x={px(x) + (rightHalf ? -8 : 8)} y={py(y) + (y >= 0 ? -8 : 16)} textAnchor={rightHalf ? 'end' : 'start'} fill="#b45309" fontSize="12" fontWeight="700">({x}, {y})</text>
     </svg>
   );
 }

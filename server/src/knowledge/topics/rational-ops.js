@@ -14,7 +14,7 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const range = difficulty === 'easy' ? 10 : difficulty === 'hard' ? 50 : 20;
+    const range = difficulty === 'easy' ? 30 : difficulty === 'hard' ? 300 : 120;
     const a = randInt(-range, range);
     const b = randInt(-range, range);
     const op = pick(['+', '-']);

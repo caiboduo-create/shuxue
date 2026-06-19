@@ -17,11 +17,11 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    // 难度控制半径范围：简单用小整数，困难用较大或含 .5 的半径
+    // 半径整体增大并分档：简单用小整数，困难用更大或含 .5 的半径
     let r;
-    if (difficulty === 'easy') r = randInt(1, 5);
-    else if (difficulty === 'hard') r = pick([6, 7, 8, 9, 10, 12, 2.5, 3.5, 4.5]);
-    else r = randInt(3, 9);
+    if (difficulty === 'easy') r = randInt(2, 12);
+    else if (difficulty === 'hard') r = pick([18, 20, 22, 25, 30, 35, 40, 15.5, 22.5]);
+    else r = randInt(8, 25);
 
     const ask = pick(['area', 'circumference']);
     // 给直径时取偶数半径，保证直径是整数、好算（困难允许 .5 半径配奇数直径）

@@ -23,15 +23,16 @@ export default {
   generate(difficulty) {
     const op = pick(['×', '÷']);
     let a, b;
+    // 因数整体增大并分档（除法用乘积当被除数，保证整除）
     if (difficulty === 'easy') {
-      a = randInt(2, 9);
-      b = randInt(2, 9);
-    } else if (difficulty === 'hard') {
-      a = randInt(11, 25);
-      b = randInt(3, 12);
-    } else {
       a = randInt(2, 12);
       b = randInt(2, 9);
+    } else if (difficulty === 'hard') {
+      a = randInt(15, 40);
+      b = randInt(6, 20);
+    } else {
+      a = randInt(3, 20);
+      b = randInt(3, 12);
     }
     if (op === '×') {
       return { type: 'numeric', stem: pick(STEMS_MUL)(a, b), params: { a, b, op } };

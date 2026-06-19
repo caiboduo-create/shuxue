@@ -39,9 +39,9 @@ export default {
     let y0;
 
     if (difficulty === 'easy') {
-      // 与坐标轴平行的直线：距离 = 坐标差，最直观
-      const dist = randInt(1, 4);
-      const k = randInt(1, 5);
+      // 与坐标轴平行的直线：距离 = 坐标差，最直观（范围增大）
+      const dist = randInt(2, 15);
+      const k = randInt(2, 18);
       if (pick([true, false])) {
         // 水平线 y = k  ->  0·x + 1·y − k = 0
         a = 0;
@@ -59,12 +59,13 @@ export default {
         x0 = k - dist >= 0 && pick([true, false]) ? k - dist : k + dist;
       }
     } else {
-      // 斜线：法向量为勾股数，分母为 5，反推 c 让答案为整数
+      // 斜线：法向量为勾股数，分母为 5，反推 c 让答案为整数（距离与坐标整体增大）
       [a, b] = pick(NORMALS);
-      const d = difficulty === 'hard' ? pick([2, 3]) : pick([1, 2]);
+      const d = difficulty === 'hard' ? pick([4, 5, 6, 8]) : pick([2, 3, 4, 5]);
       const sign = pick([1, -1]);
-      x0 = randInt(3, 7);
-      y0 = randInt(3, 7);
+      // 点坐标取足够大，保证垂足仍落在第一象限内（垂足 ≈ P ∓ 0.8d，避免画图越界裁切）
+      x0 = difficulty === 'hard' ? randInt(7, 16) : randInt(5, 12);
+      y0 = difficulty === 'hard' ? randInt(7, 16) : randInt(5, 12);
       // |a·x₀ + b·y₀ + c| = 5d  =>  c = sign·5d − (a·x₀ + b·y₀)
       c = sign * 5 * d - (a * x0 + b * y0);
     }

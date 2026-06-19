@@ -16,9 +16,10 @@ const STEMS_SUB = [
 ];
 
 function range(difficulty) {
-  if (difficulty === 'easy') return [1, 20];
-  if (difficulty === 'hard') return [100, 999];
-  return [10, 99];
+  // 数值整体增大并分档：易=两位内，中=三位内，难=四位数
+  if (difficulty === 'easy') return [1, 80];
+  if (difficulty === 'hard') return [300, 4000];
+  return [20, 400];
 }
 
 export default {

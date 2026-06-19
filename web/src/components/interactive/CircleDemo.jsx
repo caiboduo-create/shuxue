@@ -25,7 +25,7 @@ export default function CircleDemo() {
         </div>
         <div className="demo-side">
           <div className="demo-controls">
-            <Slider label="半径 r" value={r} min={1} max={12} unit=" cm" onChange={setR} />
+            <Slider label="半径 r" value={r} min={1} max={40} unit=" cm" onChange={setR} />
             <div className="seg" style={{ display: 'flex' }}>
               <button className={ask === 'area' ? 'on' : ''} onClick={() => setAsk('area')}>求面积</button>
               <button className={ask === 'circumference' ? 'on' : ''} onClick={() => setAsk('circumference')}>求周长</button>
