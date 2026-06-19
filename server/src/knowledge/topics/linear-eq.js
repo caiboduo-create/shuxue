@@ -1,6 +1,14 @@
 import { randInt, pick } from '../util.js';
 
 // 一元一次方程 ax + b = c（初中 7 年级）。保证解为整数
+// 多套问法，避免同一知识点题目语义单一
+const STEMS = [
+  (eq) => `解方程：${eq}，求 x。`,
+  (eq) => `求未知数 x：${eq}。`,
+  (eq) => `已知 ${eq}，那么 x 等于多少？`,
+  (eq) => `一个数 x 满足 ${eq}，这个数是多少？`,
+];
+
 export default {
   id: 'linear-eq',
   title: '一元一次方程',
@@ -23,9 +31,10 @@ export default {
     const b = randInt(-12, 12);
     const c = a * x + b;
     const bSign = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
+    const eq = `${a}x ${bSign} = ${c}`;
     return {
       type: 'numeric',
-      stem: `解方程：${a}x ${bSign} = ${c}，求 x。`,
+      stem: pick(STEMS)(eq),
       params: { a, b, c },
     };
   },
