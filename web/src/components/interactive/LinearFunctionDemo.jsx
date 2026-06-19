@@ -23,13 +23,6 @@ export default function LinearFunctionDemo() {
   const visual = { kind: 'linear-graph', k, b, x };
   const y = k * x + b;
 
-  function makeQuestion() {
-    setPractice({
-      params: { k, b, x },
-      stem: `已知一次函数 ${formatFn(k, b)}，当 x = ${x} 时，y 的值是多少？`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -64,19 +57,11 @@ export default function LinearFunctionDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          用当前 k、b、x 出一道题 →
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道一次函数题练一练 →
         </button>
       ) : (
-        <InlinePractice
-          topicId="linear-function"
-          topicTitle="一次函数 y = kx + b"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="直接填 y 的值"
-          onNew={() => setPractice(null)}
-        />
+        <InlinePractice topicId="linear-function" topicTitle="一次函数 y = kx + b" avoidParams={{ k, b, x }} />
       )}
     </div>
   );

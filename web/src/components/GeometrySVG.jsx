@@ -42,36 +42,33 @@ function LineFigure({ variant }) {
 }
 
 function AngleFigure({ degrees }) {
-  const cx = 80;
-  const cy = 150;
-  const len = 150;
+  // 顶点放在足够靠右的位置（vx ≥ len），这样钝角/平角（边指向左侧）也不会被裁出画面
+  const vx = 140;
+  const vy = 150;
+  const len = 120;
   const rad = (degrees * Math.PI) / 180;
-  // 一条边水平向右，另一条边按角度向上旋转
-  const x2 = cx + len;
-  const y2 = cy;
-  const x3 = cx + len * Math.cos(-rad);
-  const y3 = cy + len * Math.sin(-rad);
-  // 角度弧线
-  const arcR = 38;
-  const ax = cx + arcR;
-  const ay = cy;
-  const bx = cx + arcR * Math.cos(-rad);
-  const by = cy + arcR * Math.sin(-rad);
+  // 一条边水平向右，另一条边按角度向上旋转（屏幕 y 向下，所以取减）
+  const x2 = vx + len;
+  const y2 = vy;
+  const x3 = vx + len * Math.cos(rad);
+  const y3 = vy - len * Math.sin(rad);
+  const arcR = 36;
+  const bx = vx + arcR * Math.cos(rad);
+  const by = vy - arcR * Math.sin(rad);
   const largeArc = degrees > 180 ? 1 : 0;
   return (
-    <svg viewBox="0 0 280 200" width="100%" style={{ maxWidth: 320 }}>
-      <line x1={cx} y1={cy} x2={x2} y2={y2} stroke={C.blue} strokeWidth="3" />
-      <line x1={cx} y1={cy} x2={x3} y2={y3} stroke={C.blue} strokeWidth="3" />
+    <svg viewBox="0 0 280 190" width="100%" style={{ maxWidth: 320 }}>
+      <line x1={vx} y1={vy} x2={x2} y2={y2} stroke={C.blue} strokeWidth="3" />
+      <line x1={vx} y1={vy} x2={x3} y2={y3} stroke={C.blue} strokeWidth="3" />
       <path
-        d={`M ${ax} ${ay} A ${arcR} ${arcR} 0 ${largeArc} 0 ${bx} ${by}`}
+        d={`M ${vx + arcR} ${vy} A ${arcR} ${arcR} 0 ${largeArc} 0 ${bx} ${by}`}
         fill="none"
         stroke={C.amber}
         strokeWidth="2.5"
       />
-      <circle cx={cx} cy={cy} r="4" fill={C.ink} />
-      <text x={cx + 52} y={cy - 16} fill="#b45309" fontSize="15" fontWeight="700">
-        {degrees}°
-      </text>
+      <circle cx={vx} cy={vy} r="4" fill={C.ink} />
+      {/* 度数标签固定在左上角，绝不和图形重叠或被裁切 */}
+      <text x="16" y="30" fill="#b45309" fontSize="17" fontWeight="700">{degrees}°</text>
     </svg>
   );
 }
@@ -174,8 +171,8 @@ function PointsFigure({ ax, ay, bx, by, legs }) {
       {/* 两点 */}
       <circle cx={px(ax)} cy={py(ay)} r="5" fill={C.blue} />
       <circle cx={px(bx)} cy={py(by)} r="5" fill={C.blue} />
-      <text x={px(ax) - 6} y={py(ay) - 9} textAnchor="end" fill={C.ink} fontSize="13" fontWeight="700">A({ax},{ay})</text>
-      <text x={px(bx) + 6} y={py(by) - 9} fill={C.ink} fontSize="13" fontWeight="700">B({bx},{by})</text>
+      <text x={px(ax) + (ax <= 0 ? 6 : -6)} y={py(ay) - 9} textAnchor={ax <= 0 ? 'start' : 'end'} fill={C.ink} fontSize="13" fontWeight="700">A({ax},{ay})</text>
+      <text x={px(bx) + (bx >= maxC ? -6 : 6)} y={py(by) - 9} textAnchor={bx >= maxC ? 'end' : 'start'} fill={C.ink} fontSize="13" fontWeight="700">B({bx},{by})</text>
     </svg>
   );
 }
@@ -350,14 +347,15 @@ function LinearGraphFigure({ k, b, x }) {
           <line x1={px(x)} y1={py(0)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
           <line x1={px(0)} y1={py(y)} x2={px(x)} y2={py(y)} stroke={C.amber} strokeWidth="1.5" strokeDasharray="4 3" />
           <circle cx={px(x)} cy={py(y)} r="5" fill={C.amber} />
-          <text x={px(x) + 7} y={py(y) - 7} fill="#b45309" fontSize="12" fontWeight="700">({x}, {y})</text>
+          <text x={px(x) + (x >= span - 1 ? -7 : 7)} y={py(y) - 7} textAnchor={x >= span - 1 ? 'end' : 'start'} fill="#b45309" fontSize="12" fontWeight="700">({x}, {y})</text>
         </>
       )}
     </svg>
   );
 }
 
-// 分数：用方格条形图显示分数。compare 显示两条对比，op 显示两条 + 运算符
+// 分数：用方格条形图显示分数。标签放在条形左侧（右对齐），运算符放在两条之间的空隙，
+// 都留足边距，避免数字被裁切或与图形重叠。
 function FractionBar({ n, d, x, y, w, h }) {
   const cw = w / d;
   const cells = [];
@@ -375,31 +373,57 @@ function FractionBar({ n, d, x, y, w, h }) {
       />
     );
   }
-  return (
-    <g>
-      {cells}
-      <text x={x + w + 10} y={y + h / 2 + 5} fill={C.ink} fontSize="15" fontWeight="700">{n}/{d}</text>
-    </g>
-  );
+  return <g>{cells}</g>;
 }
 
 function FractionFigure({ layout, op, a, b }) {
-  const W = 260;
-  const barW = 150;
-  if (layout === 'op') {
-    return (
-      <svg viewBox={`0 0 ${W} 120`} width="100%" style={{ maxWidth: 300 }}>
-        <FractionBar n={a.n} d={a.d} x={14} y={16} w={barW} h={30} />
-        <text x={W / 2 - 16} y={78} textAnchor="middle" fill={C.ink} fontSize="22" fontWeight="800">{op}</text>
-        <FractionBar n={b.n} d={b.d} x={14} y={70} w={barW} h={30} />
-      </svg>
-    );
-  }
+  const W = 300;
+  const H = 150;
+  const labelX = 56; // 标签右边界（右对齐，文字向左延伸，留出左边距）
+  const barX = 66;
+  const barW = 200;
+  const barH = 36;
+  const yA = 24;
+  const yB = 88;
+  const gapMid = (yA + barH + yB) / 2 + 6; // 两条之间的空隙中线
+  const symbol = layout === 'op' ? op : '?';
   return (
-    <svg viewBox={`0 0 ${W} 120`} width="100%" style={{ maxWidth: 300 }}>
-      <FractionBar n={a.n} d={a.d} x={14} y={20} w={barW} h={30} />
-      <text x={W / 2 + 32} y={72} textAnchor="middle" fill={C.ink} fontSize="20" fontWeight="800">?</text>
-      <FractionBar n={b.n} d={b.d} x={14} y={66} w={barW} h={30} />
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: 320 }}>
+      <text x={labelX} y={yA + barH / 2 + 5} textAnchor="end" fill={C.ink} fontSize="16" fontWeight="700">{a.n}/{a.d}</text>
+      <FractionBar n={a.n} d={a.d} x={barX} y={yA} w={barW} h={barH} />
+      <text x={labelX} y={yB + barH / 2 + 5} textAnchor="end" fill={C.ink} fontSize="16" fontWeight="700">{b.n}/{b.d}</text>
+      <FractionBar n={b.n} d={b.d} x={barX} y={yB} w={barW} h={barH} />
+      <text x={barX + barW / 2} y={gapMid} textAnchor="middle" fill={C.ink} fontSize="22" fontWeight="800">{symbol}</text>
+    </svg>
+  );
+}
+
+// 扇形：画整圆 + 扇形 + 半径 + 圆心角弧（半径随 r 缩放）
+function SectorFigure({ r, theta }) {
+  const cx = 110;
+  const cy = 110;
+  const R = Math.max(40, Math.min(92, r * 9));
+  const rad = (theta * Math.PI) / 180;
+  const sx = cx + R;
+  const sy = cy;
+  const ex = cx + R * Math.cos(rad);
+  const ey = cy - R * Math.sin(rad);
+  const large = theta > 180 ? 1 : 0;
+  const path = `M ${cx} ${cy} L ${sx} ${sy} A ${R} ${R} 0 ${large} 0 ${ex} ${ey} Z`;
+  return (
+    <svg viewBox="0 0 220 220" width="100%" style={{ maxWidth: 260 }}>
+      <circle cx={cx} cy={cy} r={R} fill="#f1f5fd" stroke="#cdd9ec" strokeWidth="1.5" />
+      <path d={path} fill="#dbe7ff" stroke={C.blue} strokeWidth="2.5" />
+      <line x1={cx} y1={cy} x2={sx} y2={sy} stroke={C.blue} strokeWidth="2" />
+      <path
+        d={`M ${cx + 24} ${cy} A 24 24 0 ${large} 0 ${cx + 24 * Math.cos(rad)} ${cy - 24 * Math.sin(rad)}`}
+        fill="none"
+        stroke={C.amber}
+        strokeWidth="2.5"
+      />
+      <text x={cx + 30} y={cy - 12} fill="#b45309" fontSize="13" fontWeight="700">{theta}°</text>
+      <text x={cx + R / 2} y={cy - 7} textAnchor="middle" fill="#1e40af" fontSize="12" fontWeight="700">r={r}</text>
+      <circle cx={cx} cy={cy} r="3.5" fill={C.ink} />
     </svg>
   );
 }
@@ -417,6 +441,7 @@ export default function GeometrySVG({ visual }) {
   else if (visual.kind === 'triangle') inner = <TriangleFigure {...visual} />;
   else if (visual.kind === 'linear-graph') inner = <LinearGraphFigure {...visual} />;
   else if (visual.kind === 'fraction') inner = <FractionFigure {...visual} />;
+  else if (visual.kind === 'sector') inner = <SectorFigure {...visual} />;
   else return null;
   return <div className="geo-wrap">{inner}</div>;
 }

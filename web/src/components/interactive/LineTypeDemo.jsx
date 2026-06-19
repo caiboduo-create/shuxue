@@ -37,10 +37,6 @@ export default function LineTypeDemo() {
     setVariant(v);
     setPractice(null);
   }
-  function makeQuestion() {
-    setPractice({ params: { form: 'identify', variant }, stem: '下图画的是哪一种线？' });
-  }
-
   return (
     <div className="demo">
       <div className="seg mt8" style={{ display: 'flex' }}>
@@ -122,19 +118,11 @@ export default function LineTypeDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          考考我：这是哪种线？ →
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道辨认线型的题 →
         </button>
       ) : (
-        <InlinePractice
-          topicId="line-types"
-          topicTitle="线段、射线和直线"
-          params={practice.params}
-          stem={practice.stem}
-          type="choice"
-          options={OPTIONS.map((o) => ({ ...o, label: NAMES[o.value] }))}
-          onNew={() => setPractice(null)}
-        />
+        <InlinePractice topicId="line-types" topicTitle="线段、射线和直线" avoidParams={{ form: 'identify', variant }} />
       )}
     </div>
   );

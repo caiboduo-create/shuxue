@@ -4,9 +4,10 @@ import InlinePractice from './InlinePractice.jsx';
 import { useSvgDrag, clamp } from './svgutil.js';
 
 // 角度互动演示：拖动一条射线改变角度，实时显示度数与「锐角/直角/钝角/平角」分类。
-const VX = 70;
-const VY = 165;
-const L = 200;
+// 顶点放在足够靠右处（VX ≥ L），保证钝角/平角（边指向左侧）也不会被裁出画面
+const VX = 175;
+const VY = 160;
+const L = 150;
 
 const TYPES = [
   { key: 'A', label: '锐角', value: '锐角' },
@@ -42,18 +43,11 @@ export default function AngleDemo() {
 
   const c = classify(deg);
 
-  function makeQuestion() {
-    setPractice({
-      params: { form: 'classify', deg },
-      stem: `下图这个角是 ${deg}°，它属于哪一类角？`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
         <div className="demo-stage">
-          <svg ref={svgRef} viewBox="0 0 320 220" width="100%" style={{ maxWidth: 360, touchAction: 'none' }}>
+          <svg ref={svgRef} viewBox="0 0 340 215" width="100%" style={{ maxWidth: 360, touchAction: 'none' }}>
             {/* 固定边（水平向右） */}
             <line x1={VX} y1={VY} x2={VX + L} y2={VY} stroke="#94a3b8" strokeWidth="3" />
             {/* 角度弧 */}
@@ -65,7 +59,7 @@ export default function AngleDemo() {
             />
             {/* 可拖动的边 */}
             <line x1={VX} y1={VY} x2={mx} y2={my} stroke="#2563eb" strokeWidth="3" />
-            <text x={VX + arcR + 12} y={VY - 14} fill={c.color} fontSize="16" fontWeight="700">{deg}°</text>
+            <text x="16" y="30" fill={c.color} fontSize="18" fontWeight="700">{deg}°</text>
             <circle cx={VX} cy={VY} r="4.5" fill="#1e293b" />
             <circle cx={mx} cy={my} r="10" className="handle" onPointerDown={start} />
           </svg>
@@ -98,19 +92,11 @@ export default function AngleDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          用当前角度出一道练习题 →
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道角的题练一练 →
         </button>
       ) : (
-        <InlinePractice
-          topicId="angles"
-          topicTitle="角的度量与分类"
-          params={practice.params}
-          stem={practice.stem}
-          type="choice"
-          options={TYPES}
-          onNew={() => setPractice(null)}
-        />
+        <InlinePractice topicId="angles" topicTitle="角的度量与分类" avoidParams={{ form: 'classify', deg }} />
       )}
     </div>
   );

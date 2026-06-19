@@ -90,23 +90,6 @@ export default function FractionDemo() {
     );
   }
 
-  function makeQuestion() {
-    if (mode === 'compare') {
-      setPractice({
-        type: 'choice',
-        params: { form: 'compare', a, b },
-        stem: `比较两个分数的大小，应该填哪个符号？\n${n1}/${d1} ○ ${n2}/${effD2}`,
-      });
-    } else {
-      const sign = mode === 'add' ? '+' : '−';
-      setPractice({
-        type: 'text',
-        params: { form: mode, a, b: { n: n2, d: d1 } },
-        stem: `计算：${n1}/${d1} ${sign} ${n2}/${d1} = ？（结果写成最简分数）`,
-      });
-    }
-  }
-
   return (
     <div className="demo">
       <div className="seg mt8" style={{ display: 'flex' }}>
@@ -149,19 +132,14 @@ export default function FractionDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" disabled={!canAsk} onClick={makeQuestion}>
-          {canAsk ? '用当前分数出一道题 →' : askHint}
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道分数题练一练 →
         </button>
       ) : (
         <InlinePractice
           topicId="fraction-visual"
           topicTitle="分数的比较与加减"
-          params={practice.params}
-          stem={practice.stem}
-          type={practice.type}
-          options={practice.type === 'choice' ? COMPARE_OPTIONS : []}
-          hint={practice.type === 'text' ? '结果写成最简分数，如 1/2、2/3；如果是整数就直接写，如 1' : ''}
-          onNew={() => setPractice(null)}
+          avoidParams={mode === 'compare' ? { form: 'compare', a, b } : { form: mode, a, b: { n: n2, d: d1 } }}
         />
       )}
     </div>

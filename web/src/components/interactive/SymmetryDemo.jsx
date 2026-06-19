@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import Slider from './Slider.jsx';
+import InlinePractice from './InlinePractice.jsx';
 import { useSvgDrag, clamp } from './svgutil.js';
 
 // 对称轴互动演示：拖动点 P，实时显示它关于对称轴的对称点 P'，
@@ -18,6 +18,7 @@ export default function SymmetryDemo() {
   const svgRef = useRef(null);
   const [axisX, setAxisX] = useState(6);
   const [p, setP] = useState({ x: 3, y: 4 });
+  const [practice, setPractice] = useState(false);
 
   // P' 关于竖直对称轴对称：横坐标镜像，纵坐标不变
   const mx = 2 * axisX - p.x;
@@ -91,10 +92,13 @@ export default function SymmetryDemo() {
         </div>
       </div>
 
-      <div className="practice-link mt16">
-        <span>想动手做题？这里有「数对称轴条数」的专项练习。</span>
-        <Link to="/quiz/symmetry-axis" className="btn btn-amber">去练习 →</Link>
-      </div>
+      {!practice ? (
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道对称轴的题练一练 →
+        </button>
+      ) : (
+        <InlinePractice topicId="symmetry-axis" topicTitle="轴对称图形的对称轴" />
+      )}
     </div>
   );
 }

@@ -40,13 +40,6 @@ export default function SectorDemo() {
   const coef = round2((theta / 360) * r * r); // 面积里 π 前面的系数
   const approx = round2(coef * 3.14);
 
-  function makeQuestion() {
-    setPractice({
-      params: { r, theta },
-      stem: `一个扇形的半径是 ${r} cm，圆心角是 ${theta}°。它的面积是多少平方厘米？（结果用 π 表示：例如面积是 5π 就填 5）`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -106,19 +99,11 @@ export default function SectorDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" disabled={theta === 0} onClick={makeQuestion}>
-          {theta === 0 ? '先把圆心角调大一点' : '用当前数值出一道练习题 →'}
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道扇形面积题练一练 →
         </button>
       ) : (
-        <InlinePractice
-          topicId="sector-area"
-          topicTitle="扇形的面积"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="结果用 π 表示，填写 π 前面的系数（保留两位小数），例如 12π 就填 12"
-          onNew={() => setPractice(null)}
-        />
+        <InlinePractice topicId="sector-area" topicTitle="扇形的面积" avoidParams={{ r, theta }} />
       )}
     </div>
   );

@@ -18,13 +18,6 @@ export default function TriangleDemo() {
   const c = 180 - a - b;
   const visual = { kind: 'triangle', angles: [a, b, c] };
 
-  function makeQuestion() {
-    setPractice({
-      params: { a, b },
-      stem: `如图，一个三角形的两个内角分别是 ${a}° 和 ${b}°，那么第三个内角是多少度？`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -57,19 +50,11 @@ export default function TriangleDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          用当前两个角出一道题 →
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道内角和的题练一练 →
         </button>
       ) : (
-        <InlinePractice
-          topicId="triangle-angle-sum"
-          topicTitle="三角形的内角和"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="单位是度，直接填数字"
-          onNew={() => setPractice(null)}
-        />
+        <InlinePractice topicId="triangle-angle-sum" topicTitle="三角形的内角和" avoidParams={{ a, b }} />
       )}
     </div>
   );

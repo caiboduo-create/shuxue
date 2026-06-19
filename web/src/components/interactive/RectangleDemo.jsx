@@ -14,13 +14,6 @@ export default function RectangleDemo() {
   const area = w * h;
   const perimeter = 2 * (w + h);
 
-  function makeQuestion() {
-    setPractice({
-      params: { shape: 'rect', w, h, unit: '厘米' },
-      stem: `一个长方形长 ${w} 厘米、宽 ${h} 厘米，它的面积是多少平方厘米？`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -54,18 +47,14 @@ export default function RectangleDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          用当前长宽出一道题（求面积）→
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道面积题练一练 →
         </button>
       ) : (
         <InlinePractice
           topicId="area-rect"
           topicTitle="长方形和正方形的面积"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="单位是平方厘米，直接填数字"
-          onNew={() => setPractice(null)}
+          avoidParams={{ shape: 'rect', w, h, unit: '厘米' }}
         />
       )}
     </div>

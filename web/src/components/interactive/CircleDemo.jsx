@@ -16,15 +16,6 @@ export default function CircleDemo() {
   const area = round2(3.14 * r * r);
   const circ = round2(2 * 3.14 * r);
 
-  function makeQuestion() {
-    const askName = ask === 'area' ? '面积' : '周长';
-    const askUnit = ask === 'area' ? '平方厘米' : '厘米';
-    setPractice({
-      params: { r, ask, given: 'radius', givenValue: r },
-      stem: `一个圆的半径是 ${r} 厘米，它的${askName}是多少${askUnit}？（π 取 3.14）`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -65,18 +56,14 @@ export default function CircleDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" onClick={makeQuestion}>
-          用当前参数出一道题（{ask === 'area' ? '求面积' : '求周长'}）→
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道圆的题练一练 →
         </button>
       ) : (
         <InlinePractice
           topicId="circle-measure"
           topicTitle="圆的面积与周长"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="π 取 3.14，结果保留两位小数（如 78.5）"
-          onNew={() => setPractice(null)}
+          avoidParams={{ r, ask, given: 'radius', givenValue: r }}
         />
       )}
     </div>

@@ -7,30 +7,20 @@ import { pick } from '../util.js';
 // 这样答案是有理数、可精确判分，避免 π≈3.14 取近似带来的四舍五入分歧。
 // 配套的互动课件（SectorDemo）会按学生当前拖动的 r、θ 直接调用本模块的 solve/explain 出题。
 
-// 预置一批「系数恰为整数」的干净组合，按难度分桶，保证常规练习答案是整数。
-const CLEAN = {
-  easy: [
-    { theta: 90, r: 2 }, // 1π
-    { theta: 180, r: 2 }, // 2π
-    { theta: 90, r: 4 }, // 4π
-    { theta: 120, r: 3 }, // 3π
-  ],
-  medium: [
-    { theta: 60, r: 6 }, // 6π
-    { theta: 180, r: 4 }, // 8π
-    { theta: 240, r: 3 }, // 6π
-    { theta: 45, r: 4 }, // 2π
-    { theta: 270, r: 2 }, // 3π
-  ],
-  hard: [
-    { theta: 120, r: 6 }, // 12π
-    { theta: 150, r: 6 }, // 15π
-    { theta: 30, r: 6 }, // 3π
-    { theta: 300, r: 6 }, // 30π
-  ],
+// 半径、圆心角按难度分桶随机取值（真正随机，不再固定 r=6）。
+// 答案是「π 的系数」= (θ/360)·r²，保留两位小数即可精确判分，所以 r、θ 可自由随机组合。
+const R_BY_DIFF = {
+  easy: [2, 3, 4, 5, 6],
+  medium: [5, 6, 7, 8, 9, 10],
+  hard: [8, 9, 10, 12, 15],
+};
+const THETA_BY_DIFF = {
+  easy: [60, 90, 120, 180],
+  medium: [45, 72, 120, 135, 150, 240],
+  hard: [30, 72, 135, 150, 240, 270],
 };
 
-// 保留两位小数（学生从课件拖出的任意角度也能得到稳定可判分的系数）
+// 保留两位小数（圆心角任意取值也能得到稳定可判分的系数）
 const round2 = (v) => Math.round(v * 100) / 100;
 
 // 系数 = 面积里 π 前面的数 = (θ/360)·r²
@@ -45,7 +35,8 @@ export default {
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const { theta, r } = pick(CLEAN[difficulty] || CLEAN.medium);
+    const r = pick(R_BY_DIFF[difficulty] || R_BY_DIFF.medium);
+    const theta = pick(THETA_BY_DIFF[difficulty] || THETA_BY_DIFF.medium);
     return {
       type: 'numeric',
       stem: `一个扇形的半径是 ${r} cm，圆心角是 ${theta}°。它的面积是多少平方厘米？（结果用 π 表示：例如面积是 5π 就填 5）`,

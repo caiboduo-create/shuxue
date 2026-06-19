@@ -36,13 +36,6 @@ export default function DistanceDemo() {
   for (let i = 0; i <= NX; i++) grid.push(<line key={`vx${i}`} x1={gx2px(i)} y1={gy2py(0)} x2={gx2px(i)} y2={gy2py(NY)} stroke="#e6edf7" strokeWidth="1" />);
   for (let j = 0; j <= NY; j++) grid.push(<line key={`hy${j}`} x1={gx2px(0)} y1={gy2py(j)} x2={gx2px(NX)} y2={gy2py(j)} stroke="#e6edf7" strokeWidth="1" />);
 
-  function makeQuestion() {
-    setPractice({
-      params: { ax: a.x, ay: a.y, bx: b.x, by: b.y },
-      stem: `在平面直角坐标系中，点 A(${a.x}, ${a.y}) 和点 B(${b.x}, ${b.y}) 之间的距离是多少？`,
-    });
-  }
-
   return (
     <div className="demo">
       <div className="demo-grid">
@@ -96,18 +89,14 @@ export default function DistanceDemo() {
       </div>
 
       {!practice ? (
-        <button className="btn btn-primary btn-block mt16" disabled={!isInt || sq === 0} onClick={makeQuestion}>
-          {sq === 0 ? '把 A、B 拖开一点' : isInt ? '用当前两点出一道练习题 →' : '把两点拖到距离正好是整数时再出题（如横竖对齐，或 3-4-5）'}
+        <button className="btn btn-primary btn-block mt16" onClick={() => setPractice(true)}>
+          随机出一道两点距离题练一练 →
         </button>
       ) : (
         <InlinePractice
           topicId="distance-points"
           topicTitle="平面直角坐标系中两点间的距离"
-          params={practice.params}
-          stem={practice.stem}
-          type="numeric"
-          hint="距离正好是整数，直接填数字即可"
-          onNew={() => setPractice(null)}
+          avoidParams={{ ax: a.x, ay: a.y, bx: b.x, by: b.y }}
         />
       )}
     </div>
