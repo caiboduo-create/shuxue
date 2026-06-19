@@ -11,6 +11,7 @@ import areaRect from './topics/area-rect.js';
 import linearEq from './topics/linear-eq.js';
 import rationalOps from './topics/rational-ops.js';
 import probability from './topics/probability-basic.js';
+import symmetry from './topics/symmetry.js';
 
 const TOPICS = [
   addSub,
@@ -19,6 +20,7 @@ const TOPICS = [
   angles,
   perimeter,
   areaRect,
+  symmetry,
   linearEq,
   rationalOps,
   probability,

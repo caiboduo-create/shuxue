@@ -113,12 +113,54 @@ function RectFigure({ w, h, unit, label, grid }) {
   );
 }
 
+// 轴对称：根据 shape 画出对应图形，供"数对称轴 / 判断是否轴对称"题目配图
+function SymmetryFigure({ shape }) {
+  const cx = 100;
+  const cy = 100;
+  const r = 68;
+
+  // 生成正多边形顶点（一个顶点朝正上方）
+  const regular = (n) => {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+      pts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+    }
+    return pts.join(' ');
+  };
+
+  const POLY = {
+    square: '40,40 160,40 160,160 40,160',
+    rect: '28,55 172,55 172,145 28,145',
+    equilateral: regular(3),
+    isosceles: '100,30 48,165 152,165',
+    isoTrapezoid: '68,52 132,52 168,162 32,162',
+    pentagon: regular(5),
+    hexagon: regular(6),
+    parallelogram: '52,58 178,58 148,158 22,158',
+  };
+
+  const fill = '#eff5ff';
+  const stroke = C.blue;
+
+  return (
+    <svg viewBox="0 0 200 200" width="100%" style={{ maxWidth: 240 }}>
+      {shape === 'circle' ? (
+        <circle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth="2.5" />
+      ) : (
+        <polygon points={POLY[shape] || POLY.square} fill={fill} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
 export default function GeometrySVG({ visual }) {
   if (!visual) return null;
   let inner = null;
   if (visual.kind === 'line') inner = <LineFigure variant={visual.variant} />;
   else if (visual.kind === 'angle') inner = <AngleFigure degrees={visual.degrees} />;
   else if (visual.kind === 'rect') inner = <RectFigure {...visual} />;
+  else if (visual.kind === 'symmetry') inner = <SymmetryFigure shape={visual.shape} />;
   else return null;
   return <div className="geo-wrap">{inner}</div>;
 }
