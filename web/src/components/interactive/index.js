@@ -11,6 +11,9 @@ import TriangleDemo from './TriangleDemo.jsx';
 import LinearFunctionDemo from './LinearFunctionDemo.jsx';
 import RectangleDemo from './RectangleDemo.jsx';
 import FractionDemo from './FractionDemo.jsx';
+import NumberLineDemo from './NumberLineDemo.jsx';
+import SpinnerDemo from './SpinnerDemo.jsx';
+import PointLineDemo from './PointLineDemo.jsx';
 
 export const INTERACTIVE = [
   {
@@ -112,6 +115,36 @@ export const INTERACTIVE = [
     grades: [3, 4, 5],
     topicId: 'fraction-visual',
     Component: FractionDemo,
+  },
+  {
+    id: 'number-line',
+    title: '有理数加减（数轴）',
+    subtitle: '在数轴上走一走，看懂正负号',
+    emoji: '➕',
+    category: '数与代数',
+    grades: [7],
+    topicId: 'rational-ops',
+    Component: NumberLineDemo,
+  },
+  {
+    id: 'spinner',
+    title: '简单概率（转盘）',
+    subtitle: '调份数，看概率是几分之几',
+    emoji: '🎯',
+    category: '统计与概率',
+    grades: [7, 8],
+    topicId: 'probability-basic',
+    Component: SpinnerDemo,
+  },
+  {
+    id: 'point-line',
+    title: '点到直线的距离',
+    subtitle: '移动点或直线，看垂线段变化',
+    emoji: '📐',
+    category: '图形与几何',
+    grades: [8, 9],
+    topicId: 'distance-point-line',
+    Component: PointLineDemo,
   },
 ];
 

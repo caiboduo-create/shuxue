@@ -429,6 +429,87 @@ function SectorFigure({ r, theta }) {
   );
 }
 
+// 数轴：从 a 出发，按运算移动到结果，直观展示"加正数向右 / 加负数向左 / 减一个数 = 加相反数"
+function NumberLineFigure({ a, b, op }) {
+  const result = op === '+' ? a + b : a - b;
+  const lo = Math.min(0, a, result) - 1;
+  const hi = Math.max(0, a, result) + 1;
+  const range = hi - lo;
+  const W = 340;
+  const pad = 22;
+  const y = 64;
+  const sc = (W - pad * 2) / range;
+  const X = (v) => pad + (v - lo) * sc;
+  const step = range > 24 ? Math.ceil(range / 16) : 1;
+  const ticks = [];
+  for (let v = Math.ceil(lo); v <= Math.floor(hi); v += step) {
+    ticks.push(<line key={`t${v}`} x1={X(v)} y1={y - 4} x2={X(v)} y2={y + 4} stroke="#94a3b8" strokeWidth="1" />);
+    ticks.push(<text key={`l${v}`} x={X(v)} y={y + 18} textAnchor="middle" fill="#94a3b8" fontSize="10">{v}</text>);
+  }
+  const dir = result >= a ? 1 : -1;
+  const arcTop = y - 30;
+  return (
+    <svg viewBox={`0 0 ${W} 100`} width="100%" style={{ maxWidth: 380 }}>
+      <line x1={pad - 6} y1={y} x2={W - pad + 6} y2={y} stroke={C.ink} strokeWidth="1.5" />
+      {ticks}
+      {/* 0 处加粗 */}
+      <line x1={X(0)} y1={y - 8} x2={X(0)} y2={y + 8} stroke={C.ink} strokeWidth="2" />
+      {/* 从 a 跳到 result 的弧线 + 箭头 */}
+      {result !== a && (
+        <>
+          <path d={`M ${X(a)} ${y - 6} Q ${(X(a) + X(result)) / 2} ${arcTop} ${X(result)} ${y - 6}`} fill="none" stroke={C.amber} strokeWidth="2.5" />
+          <polygon points={`${X(result)},${y - 6} ${X(result) - dir * 8},${y - 11} ${X(result) - dir * 8},${y - 1}`} fill={C.amber} />
+          <text x={(X(a) + X(result)) / 2} y={arcTop - 4} textAnchor="middle" fill="#b45309" fontSize="12" fontWeight="700">{op} ({b})</text>
+        </>
+      )}
+      <circle cx={X(a)} cy={y} r="5" fill={C.blue} />
+      <text x={X(a)} y={y + 32} textAnchor="middle" fill={C.blue} fontSize="12" fontWeight="700">起点 {a}</text>
+      <circle cx={X(result)} cy={y} r="5" fill={C.green} />
+      <text x={X(result)} y={y - 14} textAnchor="middle" fill={C.green} fontSize="12" fontWeight="700">{result}</text>
+    </svg>
+  );
+}
+
+// 转盘：按各结果的份数画扇区，高亮目标结果，直观展示概率 = 目标份数 / 总份数
+function SpinnerFigure({ segments, targetIdx }) {
+  const cx = 92;
+  const cy = 95;
+  const R = 72;
+  const total = segments.reduce((s, x) => s + x.count, 0) || 1;
+  let ang = -Math.PI / 2;
+  const arcs = segments.map((seg, i) => {
+    const frac = seg.count / total;
+    const a0 = ang;
+    const a1 = ang + frac * 2 * Math.PI;
+    ang = a1;
+    const x0 = cx + R * Math.cos(a0);
+    const y0 = cy + R * Math.sin(a0);
+    const x1 = cx + R * Math.cos(a1);
+    const y1 = cy + R * Math.sin(a1);
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    const d = `M ${cx} ${cy} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`;
+    return (
+      <path key={i} d={d} fill={seg.color} stroke="#fff" strokeWidth={i === targetIdx ? 3.5 : 1.5} opacity={targetIdx == null || i === targetIdx ? 1 : 0.45} />
+    );
+  });
+  return (
+    <svg viewBox="0 0 300 195" width="100%" style={{ maxWidth: 340 }}>
+      {arcs}
+      {/* 顶部指针 */}
+      <polygon points={`${cx},${cy - R - 10} ${cx - 7},${cy - R + 4} ${cx + 7},${cy - R + 4}`} fill={C.ink} />
+      {/* 图例 */}
+      {segments.map((seg, i) => (
+        <g key={i}>
+          <rect x={186} y={36 + i * 26} width={16} height={16} rx="3" fill={seg.color} stroke={i === targetIdx ? C.ink : '#fff'} strokeWidth={i === targetIdx ? 2 : 1} />
+          <text x={210} y={49 + i * 26} fill={C.ink} fontSize="14" fontWeight={i === targetIdx ? 700 : 500}>
+            {seg.label} × {seg.count}{i === targetIdx ? '（目标）' : ''}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function GeometrySVG({ visual }) {
   if (!visual) return null;
   let inner = null;
@@ -443,6 +524,8 @@ export default function GeometrySVG({ visual }) {
   else if (visual.kind === 'linear-graph') inner = <LinearGraphFigure {...visual} />;
   else if (visual.kind === 'fraction') inner = <FractionFigure {...visual} />;
   else if (visual.kind === 'sector') inner = <SectorFigure {...visual} />;
+  else if (visual.kind === 'numberline') inner = <NumberLineFigure {...visual} />;
+  else if (visual.kind === 'spinner') inner = <SpinnerFigure {...visual} />;
   else return null;
   return <div className="geo-wrap">{inner}</div>;
 }
