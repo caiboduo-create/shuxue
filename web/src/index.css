@@ -192,6 +192,14 @@ button { font-family: var(--body); cursor: pointer; }
 .progress-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--amber)); border-radius: 999px; }
 
 /* —— 错题本 —— */
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip {
+  border: 1.5px solid var(--line); background: #fff; color: var(--ink-soft);
+  border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+  transition: all 0.12s ease;
+}
+.filter-chip:hover { border-color: var(--blue); color: var(--blue-deep); }
+.filter-chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 .wrong-item { background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 12px; padding: 14px 16px; }
 .wrong-item .wi-stem { font-weight: 600; line-height: 1.6; white-space: pre-wrap; }
 .wrong-item .wi-meta { font-size: 13px; color: var(--ink-soft); margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../lib/api.js';
-import { addWrong, recordAnswer } from '../../lib/store.js';
+import { addWrong, recordAnswer, resolveWrong } from '../../lib/store.js';
 import ExplainView from '../ExplainView.jsx';
 
 // 课件内嵌「练一练」：把学生在演示里拖出的当前参数直接变成一道题。
@@ -42,10 +42,15 @@ export default function InlinePractice({
           topicTitle,
           difficulty: 'demo',
           stem,
+          type,
+          options,
+          params,
           yourAnswer:
             type === 'choice' ? options.find((o) => o.value === userAnswer)?.label : userAnswer,
           correctAnswer: type === 'choice' ? String(correctText) : String(correctText),
         });
+      } else {
+        resolveWrong(topicId, params);
       }
       const ex = await api.explain(topicId, params, stem);
       setExplain(ex);

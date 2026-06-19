@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { addWrong, recordAnswer, weakestTopic } from '../lib/store.js';
+import { addWrong, recordAnswer, resolveWrong, weakestTopic } from '../lib/store.js';
 import GeometrySVG from '../components/GeometrySVG.jsx';
 import ExplainView from '../components/ExplainView.jsx';
 
@@ -14,6 +14,8 @@ const DIFFS = [
 export default function Quiz() {
   const { topicId } = useParams();
   const nav = useNavigate();
+  const loc = useLocation();
+  const retry = loc.state?.retryQuestion; // 从错题本「重做这道题」带过来的原题
 
   const [difficulty, setDifficulty] = useState('medium');
   const [q, setQ] = useState(null);
@@ -47,7 +49,19 @@ export default function Quiz() {
   );
 
   useEffect(() => {
-    load(difficulty);
+    // 错题本「重做这道题」：直接用原题（同参数），不重新出题
+    if (retry && retry.topicId === topicId) {
+      setQ(retry);
+      setDifficulty(retry.difficulty || 'medium');
+      setLoading(false);
+      setErr('');
+      setResult(null);
+      setExplain(null);
+      setSelected(null);
+      setInput('');
+    } else {
+      load(difficulty);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
@@ -64,8 +78,8 @@ export default function Quiz() {
       setResult(r);
       // 记录进度
       recordAnswer({ topicId: q.topicId, topicTitle: q.topicTitle, correct: r.correct });
-      // 答错存入错题本
       if (!r.correct) {
+        // 答错存入错题本（保存足够信息以便"重做这道题"原样复现）
         const correctText =
           r.correctValue !== undefined
             ? q.options?.find((o) => o.value === r.correctValue)?.label ?? r.correctValue
@@ -73,11 +87,19 @@ export default function Quiz() {
         addWrong({
           topicId: q.topicId,
           topicTitle: q.topicTitle,
+          category: q.category,
           difficulty: q.difficulty,
           stem: q.stem,
+          type: q.type,
+          options: q.options,
+          visual: q.visual,
+          params: q.params,
           yourAnswer: q.type === 'choice' ? q.options.find((o) => o.value === userAnswer)?.label : userAnswer,
           correctAnswer: q.type === 'choice' ? correctText : String(correctText),
         });
+      } else {
+        // 答对了：若这道题在错题本里，自动移除（做对即清除）
+        resolveWrong(q.topicId, q.params);
       }
       // 自动拉取讲解
       setExplaining(true);
@@ -125,7 +147,7 @@ export default function Quiz() {
         <div className="card mt16">
           <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
             <span className="badge">{q.category}</span>
-            <span className="badge grey">{DIFFS.find((d) => d.v === q.difficulty)?.label}</span>
+            <span className="badge grey">{DIFFS.find((d) => d.v === q.difficulty)?.label || '练习'}</span>
           </div>
 
           <div className="stem">{q.stem}</div>

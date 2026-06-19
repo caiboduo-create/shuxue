@@ -22,8 +22,16 @@ function write(key, val) {
 export function getWrongBook() {
   return read(WRONG_KEY, []);
 }
+
+// 判断两条错题是不是"同一道题"：知识点相同且参数完全一致
+function sameQuestion(a, b) {
+  if (!a.params || !b.params) return false;
+  return a.topicId === b.topicId && JSON.stringify(a.params) === JSON.stringify(b.params);
+}
+
 export function addWrong(entry) {
-  const list = getWrongBook();
+  // 同一道题只保留最新一条，避免错题本里同题重复堆积
+  const list = getWrongBook().filter((w) => !sameQuestion(w, entry));
   list.unshift({ ...entry, ts: Date.now() });
   write(WRONG_KEY, list.slice(0, 200)); // 最多保留 200 条
 }
@@ -32,6 +40,19 @@ export function removeWrong(ts) {
     WRONG_KEY,
     getWrongBook().filter((w) => w.ts !== ts)
   );
+}
+// 做对某道题后，自动把错题本里这道题（同知识点 + 同参数）移除，形成"做对即清除"的闭环
+export function resolveWrong(topicId, params) {
+  const list = getWrongBook();
+  const key = JSON.stringify(params);
+  const next = list.filter(
+    (w) => !(w.topicId === topicId && w.params && JSON.stringify(w.params) === key)
+  );
+  if (next.length !== list.length) {
+    write(WRONG_KEY, next);
+    return true;
+  }
+  return false;
 }
 export function clearWrong() {
   write(WRONG_KEY, []);
@@ -59,13 +80,15 @@ export function resetStats() {
 }
 
 // 找出正确率最低的知识点（薄弱点），用于"针对薄弱点继续出题"
-export function weakestTopic(minAttempts = 3) {
+export function weakestTopic(minAttempts = 2) {
+  return weakTopics({ minAttempts })[0] || null;
+}
+
+// 薄弱知识点列表：正确率 < 100% 且练习达到最少次数，按正确率升序（最薄弱的排最前）
+export function weakTopics({ minAttempts = 2 } = {}) {
   const s = getStats();
-  let weakest = null;
-  for (const [id, t] of Object.entries(s.byTopic)) {
-    if (t.total < minAttempts) continue;
-    const rate = t.correct / t.total;
-    if (!weakest || rate < weakest.rate) weakest = { id, title: t.title, rate, ...t };
-  }
-  return weakest;
+  return Object.entries(s.byTopic)
+    .map(([id, t]) => ({ id, title: t.title, total: t.total, correct: t.correct, rate: t.correct / t.total }))
+    .filter((t) => t.total >= minAttempts && t.rate < 1)
+    .sort((a, b) => a.rate - b.rate);
 }
