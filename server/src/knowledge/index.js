@@ -36,6 +36,11 @@ import remainderDivision from './topics/remainder-division.js';
 import massUnit from './topics/mass-unit.js';
 import combinationBasic from './topics/combination-basic.js';
 import reasoningBasic from './topics/reasoning-basic.js';
+import decimalMul from './topics/decimal-mul.js';
+import decimalDiv from './topics/decimal-div.js';
+import gridPosition from './topics/grid-position.js';
+import primaryEquation from './topics/primary-equation.js';
+import treePlanting from './topics/tree-planting.js';
 import { PRIMARY_CURRICULUM } from './curriculum.js';
 
 const TOPICS = [
@@ -56,6 +61,11 @@ const TOPICS = [
   massUnit,
   combinationBasic,
   reasoningBasic,
+  decimalMul,
+  decimalDiv,
+  gridPosition,
+  primaryEquation,
+  treePlanting,
   mulDiv,
   lineTypes,
   angles,
