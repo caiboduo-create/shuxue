@@ -169,7 +169,7 @@ function makeHundredBasicExplain(a, b, op, ans) {
       },
       { title: '合起来', detail: `${tenPart} 和 ${onePart} 合起来是 ${ans}。` },
     ],
-    whyItWorks: '这类题不需要进位或退位，把整十数和几个一分开算就可以。',
+    whyItWorks: '把十个十个的部分和一个一个的部分分开算，再合起来就可以。',
     commonMistakes: [],
     summary: `${a} ${op} ${b} = ${ans}。`,
   };

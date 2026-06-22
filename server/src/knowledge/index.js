@@ -28,6 +28,14 @@ import moneyBasic from './topics/money-basic.js';
 import patternBasic from './topics/pattern-basic.js';
 import lengthUnit from './topics/length-unit.js';
 import dataBasic from './topics/data-basic.js';
+import numberSenseBasic from './topics/number-sense-basic.js';
+import angleBasic from './topics/angle-basic.js';
+import viewBasic from './topics/view-basic.js';
+import motionBasic from './topics/motion-basic.js';
+import remainderDivision from './topics/remainder-division.js';
+import massUnit from './topics/mass-unit.js';
+import combinationBasic from './topics/combination-basic.js';
+import reasoningBasic from './topics/reasoning-basic.js';
 import { PRIMARY_CURRICULUM } from './curriculum.js';
 
 const TOPICS = [
@@ -38,8 +46,16 @@ const TOPICS = [
   classifyBasic,
   moneyBasic,
   patternBasic,
+  numberSenseBasic,
   lengthUnit,
   dataBasic,
+  angleBasic,
+  viewBasic,
+  motionBasic,
+  remainderDivision,
+  massUnit,
+  combinationBasic,
+  reasoningBasic,
   mulDiv,
   lineTypes,
   angles,

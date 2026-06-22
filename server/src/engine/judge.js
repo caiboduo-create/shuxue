@@ -10,6 +10,15 @@ function normNumber(s) {
   return Number(s.trim().replace(/，/g, '').replace(/。/g, '').replace(/[°厘米平方个度]/g, ''));
 }
 
+function normText(s) {
+  return String(s)
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/，/g, ',')
+    .replace(/。/g, '')
+    .replace(/剩/g, '余');
+}
+
 // 解析分数 / 整数 / 小数为 {n, d} 便于比较概率类答案
 function parseFraction(s) {
   if (typeof s === 'number') return { n: s, d: 1 };
@@ -58,7 +67,13 @@ export function judge(topicId, params, userAnswer) {
     return { correct, correctAnswer: solution.answer, type: 'text' };
   }
 
-  // 3) 数值题：容忍极小浮点误差
+  // 3) 文本型答案：例如"3余2"。去掉空格和句号后比较。
+  if (typeof solution.answer === 'string' && !Number.isFinite(Number(solution.answer))) {
+    const correct = normText(userAnswer) === normText(solution.answer);
+    return { correct, correctAnswer: solution.answer, type: 'text' };
+  }
+
+  // 4) 数值题：容忍极小浮点误差
   const want = Number(solution.answer);
   const got = normNumber(userAnswer);
   const correct = Number.isFinite(got) && Math.abs(got - want) < 1e-6;
