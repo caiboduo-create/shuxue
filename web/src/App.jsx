@@ -7,6 +7,13 @@ import WrongBook from './pages/WrongBook.jsx';
 import Progress from './pages/Progress.jsx';
 import Interactive from './pages/Interactive.jsx';
 import InteractiveDemo from './pages/InteractiveDemo.jsx';
+import TopicLearn from './pages/TopicLearn.jsx';
+import PhotoSolve from './pages/PhotoSolve.jsx';
+
+const navItems = [
+  { to: '/photo-solve', label: 'AI拍照答题', icon: '拍', tone: 'pink' },
+  { to: '/progress', label: '学习进度', icon: '↗', tone: 'green' },
+];
 
 function TopBar() {
   return (
@@ -16,18 +23,18 @@ function TopBar() {
         <span>数学小课堂</span>
       </Link>
       <span className="spacer" />
-      <NavLink to="/interactive" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
-        互动课件
-      </NavLink>
-      <NavLink to="/grades" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
-        练习
-      </NavLink>
-      <NavLink to="/wrong" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
-        错题本
-      </NavLink>
-      <NavLink to="/progress" className={({ isActive }) => 'navlink' + (isActive ? ' active' : '')}>
-        进度
-      </NavLink>
+      <nav className="topnav" aria-label="主导航">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) => `navlink nav-${item.tone}${isActive ? ' active' : ''}`}
+          >
+            <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </header>
   );
 }
@@ -41,8 +48,10 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/interactive" element={<Interactive />} />
           <Route path="/interactive/:demoId" element={<InteractiveDemo />} />
+          <Route path="/photo-solve" element={<PhotoSolve />} />
           <Route path="/grades" element={<GradeSelect />} />
           <Route path="/grade/:grade" element={<TopicSelect />} />
+          <Route path="/learn/:topicId" element={<TopicLearn />} />
           <Route path="/quiz/:topicId" element={<Quiz />} />
           <Route path="/wrong" element={<WrongBook />} />
           <Route path="/progress" element={<Progress />} />

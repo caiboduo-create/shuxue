@@ -6,6 +6,7 @@ const C = {
   ink: '#1e293b',
   blue: '#2563eb',
   amber: '#f59e0b',
+  green: '#16a34a',
   faint: '#cdd9ec',
 };
 
@@ -399,6 +400,52 @@ function FractionFigure({ layout, op, a, b }) {
   );
 }
 
+function ScaleFigure({ form, mapCm, scale, unit, w, h, factor }) {
+  if (form === 'shape') {
+    const base = 13;
+    const x1 = 32;
+    const y1 = 82;
+    const x2 = 178;
+    const y2 = 42;
+    return (
+      <svg viewBox="0 0 330 190" width="100%" style={{ maxWidth: 360 }}>
+        <rect x={x1} y={y1} width={w * base} height={h * base} fill="#eff5ff" stroke={C.blue} strokeWidth="2.5" />
+        <text x={x1 + (w * base) / 2} y={y1 + h * base + 22} textAnchor="middle" fill={C.ink} fontSize="13" fontWeight="700">
+          原图 {w}×{h}
+        </text>
+        <rect x={x2} y={y2} width={w * factor * base} height={h * factor * base} fill="#e8f8ee" stroke={C.green} strokeWidth="2.5" />
+        <text x={x2 + (w * factor * base) / 2} y={y2 + h * factor * base + 22} textAnchor="middle" fill={C.ink} fontSize="13" fontWeight="700">
+          放大 {factor} 倍
+        </text>
+        <text x="165" y="24" textAnchor="middle" fill="#64748b" fontSize="13">每条边都乘同一个倍数</text>
+      </svg>
+    );
+  }
+
+  const realCm = (mapCm || 1) * scale;
+  const realText = unit === 'km' ? `${realCm / 100000} 千米` : `${realCm / 100} 米`;
+  const mapW = Math.max(44, Math.min(230, (mapCm || 1) * 18));
+  return (
+    <svg viewBox="0 0 340 165" width="100%" style={{ maxWidth: 380 }}>
+      <line x1="42" y1="56" x2={42 + mapW} y2="56" stroke={C.blue} strokeWidth="7" strokeLinecap="round" />
+      <circle cx="42" cy="56" r="7" fill={C.blue} />
+      <circle cx={42 + mapW} cy="56" r="7" fill={C.blue} />
+      <text x={42 + mapW / 2} y="34" textAnchor="middle" fill={C.ink} fontSize="15" fontWeight="700">
+        图上 {mapCm} cm
+      </text>
+      <text x="170" y="92" textAnchor="middle" fill="#64748b" fontSize="13">
+        比例尺 1:{scale}
+      </text>
+      <line x1="42" y1="124" x2="298" y2="124" stroke={C.green} strokeWidth="7" strokeLinecap="round" />
+      <circle cx="42" cy="124" r="7" fill={C.green} />
+      <circle cx="298" cy="124" r="7" fill={C.green} />
+      <text x="170" y="151" textAnchor="middle" fill={C.ink} fontSize="15" fontWeight="700">
+        实际 {realText}
+      </text>
+    </svg>
+  );
+}
+
 // 扇形：画整圆 + 扇形 + 半径 + 圆心角弧（半径随 r 缩放）
 function SectorFigure({ r, theta }) {
   const cx = 110;
@@ -524,6 +571,7 @@ export default function GeometrySVG({ visual }) {
   else if (visual.kind === 'triangle') inner = <TriangleFigure {...visual} />;
   else if (visual.kind === 'linear-graph') inner = <LinearGraphFigure {...visual} />;
   else if (visual.kind === 'fraction') inner = <FractionFigure {...visual} />;
+  else if (visual.kind === 'scale') inner = <ScaleFigure {...visual} />;
   else if (visual.kind === 'sector') inner = <SectorFigure {...visual} />;
   else if (visual.kind === 'numberline') inner = <NumberLineFigure {...visual} />;
   else if (visual.kind === 'spinner') inner = <SpinnerFigure {...visual} />;

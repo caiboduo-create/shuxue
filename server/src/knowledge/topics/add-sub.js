@@ -15,11 +15,75 @@ const STEMS_SUB = [
   (a, b) => `${a} 比 ${b} 多多少？`,
 ];
 
+const SCOPE_CONFIG = {
+  'within-5': { lo: 0, hi: 5, ops: ['+', '-'], resultMax: 5 },
+  'within-10': { lo: 0, hi: 10, ops: ['+', '-'], resultMax: 10 },
+  'plus-within-20-carry': { lo: 2, hi: 9, ops: ['+'], resultMin: 11, resultMax: 20 },
+  'minus-within-20-borrow': { minuendLo: 11, minuendHi: 20, subtrahendLo: 2, subtrahendHi: 9, ops: ['-'], borrow: true },
+  'within-100-basic': { lo: 1, hi: 99, ops: ['+', '-'], resultMax: 100, noCarry: true, noBorrow: true },
+  'within-100-carry': { lo: 10, hi: 99, ops: ['+', '-'], resultMax: 100, carry: true, borrow: true },
+  'within-1000': { lo: 100, hi: 999, ops: ['+', '-'], resultMax: 1000 },
+  'within-10000': { lo: 1000, hi: 9999, ops: ['+', '-'], resultMax: 9999 },
+};
+
 function range(difficulty) {
   // 数值整体增大并分档：易=两位内，中=三位内，难=四位数
   if (difficulty === 'easy') return [1, 80];
   if (difficulty === 'hard') return [300, 4000];
   return [20, 400];
+}
+
+function scopedConfig(scope) {
+  return scope?.id ? SCOPE_CONFIG[scope.id] : null;
+}
+
+function boundedAdd(cfg) {
+  for (let i = 0; i < 120; i++) {
+    const a = randInt(cfg.lo, cfg.hi);
+    const b = randInt(cfg.lo, cfg.hi);
+    const sum = a + b;
+    if (sum === 0) continue;
+    if (cfg.resultMin !== undefined && sum < cfg.resultMin) continue;
+    if (cfg.resultMax !== undefined && sum > cfg.resultMax) continue;
+    if (cfg.carry && (a % 10) + (b % 10) < 10) continue;
+    if (cfg.noCarry && (a % 10) + (b % 10) >= 10) continue;
+    return [a, b];
+  }
+  return [randInt(cfg.lo, cfg.hi), randInt(cfg.lo, cfg.hi)];
+}
+
+function boundedSub(cfg) {
+  if (cfg.borrow && cfg.minuendLo !== undefined && cfg.subtrahendLo !== undefined) {
+    for (let i = 0; i < 120; i++) {
+      const a = randInt(cfg.minuendLo, cfg.minuendHi);
+      const b = randInt(cfg.subtrahendLo, cfg.subtrahendHi);
+      if (a >= b && a % 10 < b % 10) return [a, b];
+    }
+    return [13, 8];
+  }
+
+  let a = randInt(cfg.lo, cfg.hi);
+  let b = randInt(cfg.lo, cfg.hi);
+  for (let i = 0; i < 80; i++) {
+    a = randInt(cfg.lo, cfg.hi);
+    b = randInt(cfg.lo, cfg.hi);
+    if (b > a) [a, b] = [b, a];
+    if (a === 0 && b === 0) continue;
+    if (cfg.lo === 0 && b === 0) continue;
+    break;
+  }
+  if (cfg.borrow || cfg.noBorrow) {
+    for (let i = 0; i < 120; i++) {
+      a = randInt(cfg.lo, cfg.hi);
+      b = randInt(cfg.lo, cfg.hi);
+      if (b > a) [a, b] = [b, a];
+      if (a === 0 && b === 0) continue;
+      const hasBorrow = a % 10 < b % 10;
+      if (cfg.borrow && hasBorrow) return [a, b];
+      if (cfg.noBorrow && !hasBorrow) return [a, b];
+    }
+  }
+  return [a, b];
 }
 
 export default {
@@ -30,14 +94,23 @@ export default {
   grades: [1, 2, 3],
   difficulties: ['easy', 'medium', 'hard'],
 
-  generate(difficulty) {
-    const [lo, hi] = range(difficulty);
-    const op = pick(['+', '-']);
-    let a = randInt(lo, hi);
-    let b = randInt(lo, hi);
-    if (op === '-' && b > a) [a, b] = [b, a]; // 保证不出现负数（小学阶段）
+  generate(difficulty, context = {}) {
+    const cfg = scopedConfig(context.scope);
+    const op = pick(cfg?.ops || ['+', '-']);
+    let a;
+    let b;
+
+    if (cfg) {
+      [a, b] = op === '+' ? boundedAdd(cfg) : boundedSub(cfg);
+    } else {
+      const [lo, hi] = range(difficulty);
+      a = randInt(lo, hi);
+      b = randInt(lo, hi);
+      if (op === '-' && b > a) [a, b] = [b, a]; // 保证不出现负数（小学阶段）
+    }
+
     const stem = op === '+' ? pick(STEMS_ADD)(a, b) : pick(STEMS_SUB)(a, b);
-    return { type: 'numeric', stem, params: { a, b, op } };
+    return { type: 'numeric', stem, params: { a, b, op, scopeId: context.scope?.id || null } };
   },
 
   solve({ a, b, op }) {

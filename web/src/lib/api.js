@@ -20,7 +20,9 @@ async function get(url) {
 export const api = {
   meta: () => get('/api/meta'),
   topics: (grade) => get(`/api/topics?grade=${grade}`),
-  question: (topicId, difficulty) => post('/api/question', { topicId, difficulty }),
+  curriculum: (grade) => get(`/api/curriculum?grade=${grade}`),
+  question: (topicId, difficulty, options = {}) => post('/api/question', { topicId, difficulty, ...options }),
   judge: (topicId, params, userAnswer) => post('/api/judge', { topicId, params, userAnswer }),
   explain: (topicId, params, stem) => post('/api/explain', { topicId, params, stem }),
+  photoSolve: ({ imageData, note }) => post('/api/photo-solve', { imageData, note }),
 };

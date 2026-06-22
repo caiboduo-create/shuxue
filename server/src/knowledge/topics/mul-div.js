@@ -12,6 +12,44 @@ const STEMS_DIV = [
   (a, b) => `${a} 米长的彩带，每 ${b} 米剪一段，能剪成几段？`,
 ];
 
+const SCOPE_CONFIG = {
+  'table-mul-2-5': { ops: ['×'], a: [2, 5], b: [2, 9] },
+  'table-mul-6-9': { ops: ['×'], a: [6, 9], b: [2, 9] },
+  'table-div-2-5': { ops: ['÷'], quotient: [2, 9], divisor: [2, 5] },
+  'table-div-6-9': { ops: ['÷'], quotient: [2, 9], divisor: [6, 9] },
+  'table-mixed': { ops: ['×', '÷'], a: [2, 9], b: [2, 9], quotient: [2, 9], divisor: [2, 9] },
+  'multi-one-digit': { ops: ['×'], a: [12, 999], b: [2, 9] },
+  'divide-one-digit': { ops: ['÷'], quotient: [12, 999], divisor: [2, 9] },
+  'two-digit-two-digit': { ops: ['×'], a: [12, 99], b: [11, 99] },
+  'three-digit-two-digit': { ops: ['×'], a: [100, 999], b: [10, 99] },
+  'divide-two-digit': { ops: ['÷'], quotient: [10, 999], divisor: [10, 99] },
+};
+
+function scopedConfig(scope) {
+  return scope?.id ? SCOPE_CONFIG[scope.id] : null;
+}
+
+function scaledRange([lo, hi], difficulty) {
+  if (hi <= 9) return [lo, hi];
+  if (difficulty === 'easy') return [lo, Math.min(hi, 99)];
+  if (difficulty === 'hard') return [Math.min(hi, Math.max(lo, hi >= 100 ? 100 : Math.floor(hi * 0.6))), hi];
+  return [lo, Math.min(hi, 399)];
+}
+
+function scopedFactors(cfg, difficulty, op) {
+  if (op === '×') {
+    const [alo, ahi] = scaledRange(cfg.a, difficulty);
+    const [blo, bhi] = scaledRange(cfg.b, difficulty);
+    return { a: randInt(alo, ahi), b: randInt(blo, bhi), op };
+  }
+
+  const [qlo, qhi] = scaledRange(cfg.quotient, difficulty);
+  const [dlo, dhi] = scaledRange(cfg.divisor, difficulty);
+  const quotient = randInt(qlo, qhi);
+  const divisor = randInt(dlo, dhi);
+  return { a: quotient * divisor, b: divisor, op };
+}
+
 export default {
   id: 'mul-div',
   objective: '理解乘法和除法的意义，熟练口算并会应用。',
@@ -20,26 +58,38 @@ export default {
   grades: [2, 3, 4],
   difficulties: ['easy', 'medium', 'hard'],
 
-  generate(difficulty) {
-    const op = pick(['×', '÷']);
+  generate(difficulty, context = {}) {
+    const cfg = scopedConfig(context.scope);
+    const op = pick(cfg?.ops || ['×', '÷']);
     let a, b;
-    // 因数整体增大并分档（除法用乘积当被除数，保证整除）
-    if (difficulty === 'easy') {
-      a = randInt(2, 12);
-      b = randInt(2, 9);
-    } else if (difficulty === 'hard') {
-      a = randInt(15, 40);
-      b = randInt(6, 20);
+
+    if (cfg) {
+      ({ a, b } = scopedFactors(cfg, difficulty, op));
     } else {
-      a = randInt(3, 20);
-      b = randInt(3, 12);
+      // 因数整体增大并分档（除法用乘积当被除数，保证整除）
+      if (difficulty === 'easy') {
+        a = randInt(2, 12);
+        b = randInt(2, 9);
+      } else if (difficulty === 'hard') {
+        a = randInt(15, 40);
+        b = randInt(6, 20);
+      } else {
+        a = randInt(3, 20);
+        b = randInt(3, 12);
+      }
     }
+
     if (op === '×') {
-      return { type: 'numeric', stem: pick(STEMS_MUL)(a, b), params: { a, b, op } };
+      return { type: 'numeric', stem: pick(STEMS_MUL)(a, b), params: { a, b, op, scopeId: context.scope?.id || null } };
     }
+
+    if (cfg) {
+      return { type: 'numeric', stem: pick(STEMS_DIV)(a, b), params: { a, b, op, scopeId: context.scope?.id || null } };
+    }
+
     // 除法：用乘积构造被除数，保证整除
     const product = a * b;
-    return { type: 'numeric', stem: pick(STEMS_DIV)(product, b), params: { a: product, b, op } };
+    return { type: 'numeric', stem: pick(STEMS_DIV)(product, b), params: { a: product, b, op, scopeId: context.scope?.id || null } };
   },
 
   solve({ a, b, op }) {

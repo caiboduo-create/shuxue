@@ -14,6 +14,7 @@ import FractionDemo from './FractionDemo.jsx';
 import NumberLineDemo from './NumberLineDemo.jsx';
 import SpinnerDemo from './SpinnerDemo.jsx';
 import PointLineDemo from './PointLineDemo.jsx';
+import RatioScaleDemo from './RatioScaleDemo.jsx';
 
 export const INTERACTIVE = [
   {
@@ -117,11 +118,21 @@ export const INTERACTIVE = [
     Component: FractionDemo,
   },
   {
+    id: 'ratio-scale',
+    title: '比例尺与图形缩放',
+    subtitle: '调图上距离和比例尺，看实际距离怎样变化',
+    emoji: '📏',
+    category: '数与运算',
+    grades: [5, 6, 7],
+    topicId: 'ratio-scale',
+    Component: RatioScaleDemo,
+  },
+  {
     id: 'number-line',
     title: '有理数加减（数轴）',
     subtitle: '在数轴上走一走，看懂正负号',
     emoji: '➕',
-    category: '数与代数',
+    category: '数与运算',
     grades: [7],
     topicId: 'rational-ops',
     Component: NumberLineDemo,

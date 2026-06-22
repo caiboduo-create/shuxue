@@ -1,22 +1,28 @@
-import { randInt, pick } from '../util.js';
-import { simplifyFraction } from '../util.js';
+import { randInt, pick, gcd, simplifyFraction } from '../util.js';
 
 // 分数的比较与加减（小学 3–5 年级，数与运算）
 // 配方格条形图直观展示分数大小。三种问法，参数随机：
 //   compare：比较两个分数大小（选择 > / < / =）
-//   add    ：同分母分数相加 a/d + c/d，结果写成最简分数
-//   sub    ：同分母分数相减 a/d − c/d，结果写成最简分数
+//   add    ：同分母或异分母分数相加，结果写成最简分数
+//   sub    ：同分母或异分母分数相减，结果写成最简分数
 // 答案不下发前端；solve 用 params 重新计算（比较返回 correctValue，加减返回 answer 分数文本）。
+const FORM_SCOPE = {
+  'fraction-basic': ['compare', 'add'],
+  'fraction-compare': ['compare'],
+  'fraction-add-sub': ['add', 'sub'],
+};
+
 export default {
   id: 'fraction-visual',
-  objective: '会比较分数大小，会做同分母分数的加减。',
+  objective: '会比较分数大小，会做同分母和异分母分数的加减。',
   title: '分数的比较与加减',
   category: '数与运算',
   grades: [3, 4, 5],
   difficulties: ['easy', 'medium', 'hard'],
 
-  generate(difficulty) {
-    const form = difficulty === 'easy' ? pick(['compare', 'add']) : pick(['compare', 'add', 'sub']);
+  generate(difficulty, context = {}) {
+    const forms = FORM_SCOPE[context.scope?.id] || (difficulty === 'easy' ? ['compare', 'add'] : ['compare', 'add', 'sub']);
+    const form = pick(forms);
 
     if (form === 'compare') {
       if (difficulty === 'easy') {
@@ -33,7 +39,7 @@ export default {
             { key: 'C', label: '=（等于）', value: '=' },
           ],
           visual: { kind: 'fraction', layout: 'compare', a: { n: n1, d }, b: { n: n2, d } },
-          params: { form: 'compare', a: { n: n1, d }, b: { n: n2, d } },
+          params: { form: 'compare', a: { n: n1, d }, b: { n: n2, d }, scopeId: context.scope?.id || null },
         };
       }
       // 中等/困难：不同分母
@@ -50,27 +56,53 @@ export default {
           { key: 'C', label: '=（等于）', value: '=' },
         ],
         visual: { kind: 'fraction', layout: 'compare', a: { n: n1, d: d1 }, b: { n: n2, d: d2 } },
-        params: { form: 'compare', a: { n: n1, d: d1 }, b: { n: n2, d: d2 } },
+        params: { form: 'compare', a: { n: n1, d: d1 }, b: { n: n2, d: d2 }, scopeId: context.scope?.id || null },
       };
     }
 
-    // add / sub：同分母，结果为真分数（add 保证 a+c≤d，sub 保证 a>c）
+    // add / sub：简单题保持同分母；中等/困难加入异分母，训练通分。
+    const sameDenominator = difficulty === 'easy' || Math.random() < 0.45;
     const d = randInt(difficulty === 'hard' ? 5 : 3, difficulty === 'hard' ? 12 : 8);
+    let d2 = d;
+    if (!sameDenominator) {
+      d2 = randInt(3, difficulty === 'hard' ? 12 : 9);
+      for (let i = 0; i < 8 && d2 === d; i++) d2 = randInt(3, difficulty === 'hard' ? 12 : 9);
+    }
     let a;
     let c;
     if (form === 'add') {
       a = randInt(1, d - 1);
-      c = randInt(1, d - a); // a + c ≤ d
+      c = sameDenominator ? randInt(1, d - a) : randInt(1, d2 - 1);
     } else {
       a = randInt(2, d - 1);
-      c = randInt(1, a - 1); // a > c
+      c = sameDenominator ? randInt(1, a - 1) : randInt(1, d2 - 1);
+      for (let i = 0; i < 12 && a * d2 <= c * d; i++) {
+        a = randInt(2, d - 1);
+        c = randInt(1, d2 - 1);
+      }
+      if (a * d2 <= c * d) {
+        a = d - 1;
+        c = 1;
+      }
     }
     const sign = form === 'add' ? '+' : '−';
+    const scene =
+      form === 'add'
+        ? pick([
+            `小林先吃了 ${a}/${d} 个披萨，又吃了 ${c}/${d2} 个披萨，一共吃了多少个披萨？（结果写成最简分数）`,
+            `计算：${a}/${d} ${sign} ${c}/${d2} = ？（结果写成最简分数）`,
+            `一条彩带第一次用去 ${a}/${d}，第二次用去 ${c}/${d2}，一共用去几分之几？`,
+          ])
+        : pick([
+            `计算：${a}/${d} ${sign} ${c}/${d2} = ？（结果写成最简分数）`,
+            `一杯果汁原来有 ${a}/${d} 杯，喝掉 ${c}/${d2} 杯，还剩多少杯？`,
+            `一段绳子长 ${a}/${d} 米，剪去 ${c}/${d2} 米，还剩多少米？`,
+          ]);
     return {
       type: 'text',
-      stem: `计算：${a}/${d} ${sign} ${c}/${d} = ？（结果写成最简分数）`,
-      visual: { kind: 'fraction', layout: 'op', op: form === 'add' ? '+' : '-', a: { n: a, d }, b: { n: c, d } },
-      params: { form, a: { n: a, d }, b: { n: c, d } },
+      stem: scene,
+      visual: { kind: 'fraction', layout: 'op', op: form === 'add' ? '+' : '-', a: { n: a, d }, b: { n: c, d: d2 } },
+      params: { form, a: { n: a, d }, b: { n: c, d: d2 }, scopeId: context.scope?.id || null },
     };
   },
 
@@ -82,8 +114,11 @@ export default {
       const correctValue = left > right ? '>' : left < right ? '<' : '=';
       return { correctValue };
     }
-    const n = form === 'add' ? a.n + b.n : a.n - b.n;
-    return { answer: simplifyFraction(n, a.d).text };
+    const lcm = (a.d * b.d) / gcd(a.d, b.d);
+    const an = a.n * (lcm / a.d);
+    const bn = b.n * (lcm / b.d);
+    const n = form === 'add' ? an + bn : an - bn;
+    return { answer: simplifyFraction(n, lcm).text };
   },
 
   explain({ form, a, b }) {
@@ -122,20 +157,26 @@ export default {
       };
     }
 
-    const n = form === 'add' ? a.n + b.n : a.n - b.n;
-    const res = simplifyFraction(n, a.d);
+    const sameD = a.d === b.d;
+    const lcm = sameD ? a.d : (a.d * b.d) / gcd(a.d, b.d);
+    const an = a.n * (lcm / a.d);
+    const bn = b.n * (lcm / b.d);
+    const n = form === 'add' ? an + bn : an - bn;
+    const res = simplifyFraction(n, lcm);
     const sign = form === 'add' ? '+' : '−';
-    const raw = `${n}/${a.d}`;
-    const simplified = res.text !== raw && res.text !== `${n}/${a.d}`;
+    const raw = `${n}/${lcm}`;
+    const simplified = res.text !== raw && res.text !== `${n}/${lcm}`;
     return {
       steps: [
         {
-          title: '分母相同，只算分子',
-          detail: `两个分数分母都是 ${a.d}，相加减时分母不变，只把分子${form === 'add' ? '相加' : '相减'}。`,
+          title: sameD ? '分母相同，只算分子' : '先通分',
+          detail: sameD
+            ? `两个分数分母都是 ${a.d}，相加减时分母不变，只把分子${form === 'add' ? '相加' : '相减'}。`
+            : `${a.n}/${a.d} 和 ${b.n}/${b.d} 分母不同，先通分到 ${lcm} 分之一：${a.n}/${a.d} = ${an}/${lcm}，${b.n}/${b.d} = ${bn}/${lcm}。`,
         },
         {
           title: '计算分子',
-          detail: `${a.n} ${sign} ${b.n} = ${n}，所以得到 ${raw}。`,
+          detail: `${an} ${sign} ${bn} = ${n}，所以得到 ${raw}。`,
         },
         {
           title: '化成最简分数',
@@ -145,13 +186,15 @@ export default {
         },
       ],
       whyItWorks:
-        '同分母分数相加减，就像“同样大小的份”在合并或拿走，份的大小（分母）不变，只是份数（分子）在变，所以分母保持不变、分子做加减。',
+        sameD
+          ? '同分母分数相加减，就像“同样大小的份”在合并或拿走，份的大小（分母）不变，只是份数（分子）在变，所以分母保持不变、分子做加减。'
+          : '异分母分数的每一份大小不同，不能直接加减。通分后，两边都变成同样大小的份，再合并或拿走份数。',
       commonMistakes: [
-        '把分母也加起来了（分母不变！）。',
+        sameD ? '把分母也加起来了（分母不变！）。' : '异分母时没有通分，直接把分子相加减。',
         '算完忘了约分，没写成最简分数。',
       ],
       optionAnalysis: [],
-      summary: `${a.n}/${a.d} ${sign} ${b.n}/${a.d} = ${raw} = ${res.text}。同分母分数加减：分母不变，分子加减后约分。`,
+      summary: `${a.n}/${a.d} ${sign} ${b.n}/${b.d} = ${raw} = ${res.text}。分数加减：先让分母相同，再算分子，最后约分。`,
     };
   },
 
@@ -159,7 +202,10 @@ export default {
     if (form === 'compare') {
       return `一道分数比较大小题：比较 ${a.n}/${a.d} 与 ${b.n}/${b.d}，正确符号是 ${this.solve({ form, a, b }).correctValue}。`;
     }
-    const n = form === 'add' ? a.n + b.n : a.n - b.n;
-    return `一道同分母分数${form === 'add' ? '加法' : '减法'}题：${a.n}/${a.d} ${form === 'add' ? '+' : '−'} ${b.n}/${a.d}，结果是 ${simplifyFraction(n, a.d).text}。`;
+    const lcm = (a.d * b.d) / gcd(a.d, b.d);
+    const an = a.n * (lcm / a.d);
+    const bn = b.n * (lcm / b.d);
+    const n = form === 'add' ? an + bn : an - bn;
+    return `一道分数${form === 'add' ? '加法' : '减法'}题：${a.n}/${a.d} ${form === 'add' ? '+' : '−'} ${b.n}/${b.d}，结果是 ${simplifyFraction(n, lcm).text}。`;
   },
 };

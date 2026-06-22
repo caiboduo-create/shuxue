@@ -29,14 +29,17 @@ const COMPARE_OPTIONS = [
 
 export default function FractionDemo() {
   const [mode, setMode] = useState('compare'); // compare | add | sub
+  const [sameDenominator, setSameDenominator] = useState(true);
   const [n1, setN1] = useState(1);
   const [d1, setD1] = useState(2);
   const [n2, setN2] = useState(2);
   const [d2, setD2] = useState(3);
   const [practice, setPractice] = useState(null);
 
-  // 加减法同分母：第二个分数的分母跟随第一个
-  const effD2 = mode === 'compare' ? d2 : d1;
+  const effD2 = mode === 'compare' || !sameDenominator ? d2 : d1;
+  const lcm = (d1 * effD2) / gcd(d1, effD2);
+  const nn1 = n1 * (lcm / d1);
+  const nn2 = n2 * (lcm / effD2);
 
   // 带约束的 setter（分子必须小于分母）
   const setDenom1 = (v) => { setD1(v); if (n1 > v - 1) setN1(v - 1); };
@@ -71,22 +74,22 @@ export default function FractionDemo() {
       </>
     );
   } else if (mode === 'add') {
-    const sum = n1 + n2;
+    const sum = nn1 + nn2;
     resultLine = (
       <>
-        {n1}/{d1} + {n2}/{d1} = {sum}/{d1} = <b>{simp(sum, d1)}</b>
+        {n1}/{d1} + {n2}/{effD2} = {nn1}/{lcm} + {nn2}/{lcm} = {sum}/{lcm} = <b>{simp(sum, lcm)}</b>
       </>
     );
   } else {
-    const diff = n1 - n2;
+    const diff = nn1 - nn2;
     canAsk = diff > 0;
-    askHint = canAsk ? '' : '减法要让前一个分数更大（分子 1 > 分子 2）';
+    askHint = canAsk ? '' : '减法要让前一个分数更大';
     resultLine = canAsk ? (
       <>
-        {n1}/{d1} − {n2}/{d1} = {diff}/{d1} = <b>{simp(diff, d1)}</b>
+        {n1}/{d1} − {n2}/{effD2} = {nn1}/{lcm} − {nn2}/{lcm} = {diff}/{lcm} = <b>{simp(diff, lcm)}</b>
       </>
     ) : (
-      <span className="muted">需要分子 1 大于分子 2</span>
+      <span className="muted">{askHint}</span>
     );
   }
 
@@ -108,11 +111,22 @@ export default function FractionDemo() {
             <Slider label="分数1 · 分子" value={n1} min={1} max={d1 - 1} onChange={setNum1} />
             <Slider label="分数1 · 分母" value={d1} min={2} max={10} onChange={setDenom1} />
             <Slider label="分数2 · 分子" value={n2} min={1} max={effD2 - 1} onChange={setNum2} />
-            {mode === 'compare' && (
+            {mode !== 'compare' && (
+              <div className="seg" style={{ display: 'flex' }}>
+                <button className={sameDenominator ? 'on' : ''} onClick={() => setSameDenominator(true)}>同分母</button>
+                <button className={!sameDenominator ? 'on' : ''} onClick={() => setSameDenominator(false)}>异分母</button>
+              </div>
+            )}
+            {(mode === 'compare' || !sameDenominator) && (
               <Slider label="分数2 · 分母" value={d2} min={2} max={10} onChange={setDenom2} />
             )}
-            {mode !== 'compare' && (
+            {mode !== 'compare' && sameDenominator && (
               <div className="muted" style={{ fontSize: 13 }}>加减法两个分数同分母，分母都是 {d1}。</div>
+            )}
+            {mode !== 'compare' && !sameDenominator && (
+              <div className="muted" style={{ fontSize: 13 }}>
+                异分母要先通分：公分母是 {lcm}。
+              </div>
             )}
           </div>
           <div className="formula">
@@ -139,7 +153,7 @@ export default function FractionDemo() {
         <InlinePractice
           topicId="fraction-visual"
           topicTitle="分数的比较与加减"
-          avoidParams={mode === 'compare' ? { form: 'compare', a, b } : { form: mode, a, b: { n: n2, d: d1 } }}
+          avoidParams={mode === 'compare' ? { form: 'compare', a, b } : { form: mode, a, b }}
         />
       )}
     </div>

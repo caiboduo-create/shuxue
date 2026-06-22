@@ -9,7 +9,7 @@ import ExplainView from '../ExplainView.jsx';
 const DIFFS = ['easy', 'medium', 'hard'];
 const sameParams = (a, b) => a && b && JSON.stringify(a) === JSON.stringify(b);
 
-export default function InlinePractice({ topicId, topicTitle, avoidParams = null }) {
+export default function InlinePractice({ topicId, placementId = null, topicTitle, avoidParams = null, refreshKey = 0 }) {
   // 在挂载时把"课件当前参数"快照下来，确保出的第一题和演示值不同；之后拖动课件不影响已出的题
   const [avoidKey] = useState(() => (avoidParams ? JSON.stringify(avoidParams) : ''));
 
@@ -33,7 +33,7 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
       // 随机难度 + 重试，尽量出一道和课件当前演示值不同的新题
       for (let i = 0; i < 5; i++) {
         const diff = DIFFS[Math.floor(Math.random() * DIFFS.length)];
-        const { question: got } = await api.question(topicId, diff);
+        const { question: got } = await api.question(topicId, diff, { placementId, topicTitle });
         question = got;
         if (!avoidKey || JSON.stringify(got.params) !== avoidKey) break;
       }
@@ -43,11 +43,11 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
     } finally {
       setBusy(false);
     }
-  }, [topicId, avoidKey]);
+  }, [topicId, placementId, topicTitle, avoidKey]);
 
   useEffect(() => {
     fetchNew();
-  }, [fetchNew]);
+  }, [fetchNew, refreshKey]);
 
   async function submit() {
     const userAnswer = q.type === 'choice' ? selected : input.trim();
@@ -57,7 +57,15 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
     try {
       const r = await api.judge(q.topicId, q.params, userAnswer);
       setResult(r);
-      recordAnswer({ topicId: q.topicId, topicTitle: q.topicTitle || topicTitle, correct: r.correct });
+      const activePlacementId = q.placementId || placementId || null;
+      const activeTopicTitle = topicTitle || q.topicTitle;
+      recordAnswer({
+        topicId: q.topicId,
+        placementId: activePlacementId,
+        topicTitle: activeTopicTitle,
+        curriculum: q.curriculum,
+        correct: r.correct,
+      });
       if (!r.correct) {
         const correctText =
           r.correctValue !== undefined
@@ -65,7 +73,9 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
             : r.correctAnswer;
         addWrong({
           topicId: q.topicId,
-          topicTitle: q.topicTitle || topicTitle,
+          placementId: activePlacementId,
+          topicTitle: activeTopicTitle,
+          curriculum: q.curriculum,
           category: q.category,
           difficulty: q.difficulty,
           stem: q.stem,
@@ -78,7 +88,7 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
           correctAnswer: String(correctText),
         });
       } else {
-        resolveWrong(q.topicId, q.params);
+        resolveWrong(q.topicId, q.params, activePlacementId);
       }
       const ex = await api.explain(q.topicId, q.params, q.stem);
       setExplain(ex);
@@ -162,9 +172,11 @@ export default function InlinePractice({ topicId, topicTitle, avoidParams = null
           )}
           {explain && <ExplainView data={explain} />}
 
-          <button className="btn btn-ghost btn-block mt16" disabled={busy} onClick={fetchNew}>
-            换一道随机题 →
-          </button>
+          {result && (
+            <button className="btn btn-primary btn-block mt16" disabled={busy} onClick={fetchNew}>
+              下一题 →
+            </button>
+          )}
         </>
       )}
     </div>

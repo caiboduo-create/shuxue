@@ -26,7 +26,9 @@ export function getWrongBook() {
 // 判断两条错题是不是"同一道题"：知识点相同且参数完全一致
 function sameQuestion(a, b) {
   if (!a.params || !b.params) return false;
-  return a.topicId === b.topicId && JSON.stringify(a.params) === JSON.stringify(b.params);
+  const aKey = a.placementId || a.topicId;
+  const bKey = b.placementId || b.topicId;
+  return aKey === bKey && JSON.stringify(a.params) === JSON.stringify(b.params);
 }
 
 export function addWrong(entry) {
@@ -42,11 +44,12 @@ export function removeWrong(ts) {
   );
 }
 // 做对某道题后，自动把错题本里这道题（同知识点 + 同参数）移除，形成"做对即清除"的闭环
-export function resolveWrong(topicId, params) {
+export function resolveWrong(topicId, params, placementId = null) {
   const list = getWrongBook();
   const key = JSON.stringify(params);
+  const scopeKey = placementId || topicId;
   const next = list.filter(
-    (w) => !(w.topicId === topicId && w.params && JSON.stringify(w.params) === key)
+    (w) => !((w.placementId || w.topicId) === scopeKey && w.params && JSON.stringify(w.params) === key)
   );
   if (next.length !== list.length) {
     write(WRONG_KEY, next);
@@ -63,15 +66,26 @@ export function clearWrong() {
 export function getStats() {
   return read(STAT_KEY, { total: 0, correct: 0, byTopic: {} });
 }
-export function recordAnswer({ topicId, topicTitle, correct }) {
+export function recordAnswer({ topicId, placementId = null, topicTitle, curriculum = null, correct }) {
   const s = getStats();
   s.total += 1;
   if (correct) s.correct += 1;
-  const t = s.byTopic[topicId] || { title: topicTitle, total: 0, correct: 0 };
+  const progressId = placementId || topicId;
+  const t = s.byTopic[progressId] || {
+    topicId,
+    placementId,
+    title: topicTitle,
+    curriculum,
+    total: 0,
+    correct: 0,
+  };
   t.total += 1;
   if (correct) t.correct += 1;
+  t.topicId = topicId;
+  t.placementId = placementId;
   t.title = topicTitle;
-  s.byTopic[topicId] = t;
+  t.curriculum = curriculum || t.curriculum || null;
+  s.byTopic[progressId] = t;
   write(STAT_KEY, s);
   return s;
 }
@@ -88,7 +102,16 @@ export function weakestTopic(minAttempts = 2) {
 export function weakTopics({ minAttempts = 2 } = {}) {
   const s = getStats();
   return Object.entries(s.byTopic)
-    .map(([id, t]) => ({ id, title: t.title, total: t.total, correct: t.correct, rate: t.correct / t.total }))
+    .map(([progressId, t]) => ({
+      id: t.topicId || progressId,
+      progressId,
+      placementId: t.placementId || (t.topicId && progressId !== t.topicId ? progressId : null),
+      title: t.title,
+      curriculum: t.curriculum || null,
+      total: t.total,
+      correct: t.correct,
+      rate: t.correct / t.total,
+    }))
     .filter((t) => t.total >= minAttempts && t.rate < 1)
     .sort((a, b) => a.rate - b.rate);
 }
