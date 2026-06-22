@@ -20,10 +20,26 @@ import triangleAngleSum from './topics/triangle-angle-sum.js';
 import linearFunction from './topics/linear-function.js';
 import fractionVisual from './topics/fraction-visual.js';
 import ratioScale from './topics/ratio-scale.js';
+import positionBasic from './topics/position-basic.js';
+import shapeBasic from './topics/shape-basic.js';
+import clockBasic from './topics/clock-basic.js';
+import classifyBasic from './topics/classify-basic.js';
+import moneyBasic from './topics/money-basic.js';
+import patternBasic from './topics/pattern-basic.js';
+import lengthUnit from './topics/length-unit.js';
+import dataBasic from './topics/data-basic.js';
 import { PRIMARY_CURRICULUM } from './curriculum.js';
 
 const TOPICS = [
   addSub,
+  positionBasic,
+  shapeBasic,
+  clockBasic,
+  classifyBasic,
+  moneyBasic,
+  patternBasic,
+  lengthUnit,
+  dataBasic,
   mulDiv,
   lineTypes,
   angles,

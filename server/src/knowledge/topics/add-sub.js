@@ -86,6 +86,110 @@ function boundedSub(cfg) {
   return [a, b];
 }
 
+function splitTensOnes(n) {
+  return { tens: Math.floor(n / 10) * 10, ones: n % 10 };
+}
+
+function directAnswer(a, b, op, ans) {
+  return {
+    aiPolish: false,
+    steps: [{ title: '答案', detail: `${a} ${op} ${b} = ${ans}。` }],
+    whyItWorks: '',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function countAnswer(a, b, op, ans) {
+  return {
+    aiPolish: false,
+    steps: [
+      {
+        title: '答案',
+        detail:
+          op === '+'
+            ? `${a} 加 ${b}，可以接着数，答案是 ${ans}。`
+            : `${a} 减 ${b}，就是拿走 ${b} 个，答案是 ${ans}。`,
+      },
+    ],
+    whyItWorks: '',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function makeTwentyCarryExplain(a, b, ans) {
+  const first = Math.max(a, b);
+  const second = Math.min(a, b);
+  const toTen = 10 - first;
+  const rest = second - toTen;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '先凑成 10', detail: `${first} 再加 ${toTen} 就是 10。` },
+      { title: '再加剩下的数', detail: `${second} 可以分成 ${toTen} 和 ${rest}，所以 ${first} + ${second} = 10 + ${rest} = ${ans}。` },
+    ],
+    whyItWorks: '先凑成 10，再接着算，会更容易。',
+    commonMistakes: [],
+    summary: `${a} + ${b} = ${ans}。`,
+  };
+}
+
+function makeTwentyBorrowExplain(a, b, ans) {
+  const ones = a - 10;
+  const tenMinus = 10 - b;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '先看成 10 和几', detail: `${a} 可以看成 10 和 ${ones}。` },
+      { title: '先算 10 减', detail: `10 - ${b} = ${tenMinus}。` },
+      { title: '再加剩下的', detail: `${tenMinus} + ${ones} = ${ans}，所以 ${a} - ${b} = ${ans}。` },
+    ],
+    whyItWorks: '把十几拆成 10 和几，先用 10 去减，再把剩下的几加回来。',
+    commonMistakes: ['不要把十几里的“几”忘记加回来。'],
+    summary: `${a} - ${b} = ${ans}。`,
+  };
+}
+
+function makeHundredBasicExplain(a, b, op, ans) {
+  const A = splitTensOnes(a);
+  const B = splitTensOnes(b);
+  const tenPart = op === '+' ? A.tens + B.tens : A.tens - B.tens;
+  const onePart = op === '+' ? A.ones + B.ones : A.ones - B.ones;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '分开看', detail: `${a} 可以看成 ${A.tens} 和 ${A.ones}，${b} 可以看成 ${B.tens} 和 ${B.ones}。` },
+      {
+        title: '分别算',
+        detail:
+          op === '+'
+            ? `先算整十数：${A.tens} + ${B.tens} = ${tenPart}；再算几个一：${A.ones} + ${B.ones} = ${onePart}。`
+            : `先算整十数：${A.tens} - ${B.tens} = ${tenPart}；再算几个一：${A.ones} - ${B.ones} = ${onePart}。`,
+      },
+      { title: '合起来', detail: `${tenPart} 和 ${onePart} 合起来是 ${ans}。` },
+    ],
+    whyItWorks: '这类题不需要进位或退位，把整十数和几个一分开算就可以。',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function makeColumnExplain(a, b, op, ans, level = 'hundred') {
+  const upperWord = level === 'large' ? '个位、十位、百位等数位' : '个位、十位';
+  const adjustWord = op === '+' ? '满十向前一位进 1' : '不够减时向前一位退 1 当 10';
+  return {
+    steps: [
+      { title: '看清运算', detail: `这是一道${op === '+' ? '加法' : '减法'}题：${a} ${op} ${b}。` },
+      { title: '按数位计算', detail: `${upperWord}对齐，从个位开始算，${adjustWord}。` },
+      { title: '写出答案', detail: `${a} ${op} ${b} = ${ans}。` },
+    ],
+    whyItWorks: '相同数位表示的大小相同，所以要同一位上的数和同一位上的数相加减。',
+    commonMistakes: [op === '+' ? '进位后忘记多加 1。' : '退位后忘记这一位已经少了 1。', '数位没有对齐就直接计算。'],
+    summary: `${a} ${op} ${b} = ${ans}。关键是数位对齐，再处理好${op === '+' ? '进位' : '退位'}。`,
+  };
+}
+
 export default {
   id: 'add-sub',
   objective: '掌握整数加法和减法，并能解决简单的生活问题。',
@@ -117,32 +221,15 @@ export default {
     return { answer: op === '+' ? a + b : a - b };
   },
 
-  explain({ a, b, op }) {
+  explain({ a, b, op, scopeId }) {
     const ans = op === '+' ? a + b : a - b;
-    const steps =
-      op === '+'
-        ? [
-            { title: '第一步：看清要求什么', detail: `这是一道加法题，求 ${a} 和 ${b} 合起来是多少。` },
-            { title: '第二步：对齐相加', detail: `个位、十位、百位分别对齐，从个位开始往上加，满十就向前一位进 1。` },
-            { title: '第三步：得出结果', detail: `${a} + ${b} = ${ans}。` },
-          ]
-        : [
-            { title: '第一步：看清要求什么', detail: `这是一道减法题，求 ${a} 减去 ${b} 还剩多少。` },
-            { title: '第二步：对齐相减', detail: `数位对齐，从个位开始往上减，不够减就向前一位借 1 当 10。` },
-            { title: '第三步：得出结果', detail: `${a} − ${b} = ${ans}。` },
-          ];
-    return {
-      steps,
-      whyItWorks:
-        op === '+'
-          ? '加法就是把两部分合并成整体，所以把两个数对齐相加即可。'
-          : '减法是从总数里去掉一部分，剩下的就是答案，所以用大数减小数。',
-      commonMistakes: [
-        '忘记进位或借位，导致结果差 10 或 100。',
-        '数位没对齐就直接相加减。',
-      ],
-      summary: `${a} ${op} ${b} = ${ans}。做这类题的关键是数位对齐 + 处理好进位/借位。`,
-    };
+    if (scopeId === 'within-5') return directAnswer(a, b, op, ans);
+    if (scopeId === 'within-10') return countAnswer(a, b, op, ans);
+    if (scopeId === 'plus-within-20-carry') return makeTwentyCarryExplain(a, b, ans);
+    if (scopeId === 'minus-within-20-borrow') return makeTwentyBorrowExplain(a, b, ans);
+    if (scopeId === 'within-100-basic') return makeHundredBasicExplain(a, b, op, ans);
+    if (scopeId === 'within-100-carry') return makeColumnExplain(a, b, op, ans, 'hundred');
+    return makeColumnExplain(a, b, op, ans, 'large');
   },
 
   llmContext({ a, b, op }) {

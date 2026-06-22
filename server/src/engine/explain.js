@@ -34,6 +34,9 @@ export async function explain(topicId, params, { stem } = {}) {
     summary: rule.summary || '',
   };
 
+  // 低年级或教材位置敏感的题目，直接使用规则讲解，避免 AI 润色时引入超纲术语。
+  if (rule.aiPolish === false) return base;
+
   // 2) 尝试 AI 润色
   const provider = getProvider();
   if (!provider.available) return base;
