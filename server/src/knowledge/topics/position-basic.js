@@ -1,12 +1,42 @@
 import { pick, shuffle } from '../util.js';
 
 const RELATIONS = [
-  { value: 'left', label: '左边', question: '小猫在小狗的哪边？', scene: '小猫  小狗' },
-  { value: 'right', label: '右边', question: '小狗在小猫的哪边？', scene: '小猫  小狗' },
-  { value: 'front', label: '前面', question: '排队时，小红站在小明前面。小红在小明的哪面？', scene: '小红 -> 小明' },
-  { value: 'behind', label: '后面', question: '排队时，小明站在小红后面。小明在小红的哪面？', scene: '小红 -> 小明' },
-  { value: 'up', label: '上面', question: '书在桌子的上面。书在桌子的哪面？', scene: '书 / 桌子' },
-  { value: 'down', label: '下面', question: '足球在椅子的下面。足球在椅子的哪面？', scene: '椅子 / 足球' },
+  {
+    value: 'left',
+    label: '左边',
+    question: '看位置：小猫在左边，小狗在右边。小猫在小狗的哪边？',
+    scene: '小猫在左边，小狗在右边',
+  },
+  {
+    value: 'right',
+    label: '右边',
+    question: '看位置：小猫在左边，小狗在右边。小狗在小猫的哪边？',
+    scene: '小猫在左边，小狗在右边',
+  },
+  {
+    value: 'front',
+    label: '前面',
+    question: '排队时，小红站在小明前面。小红在小明的哪面？',
+    scene: '小红在前面，小明在后面',
+  },
+  {
+    value: 'behind',
+    label: '后面',
+    question: '排队时，小明站在小红后面。小明在小红的哪面？',
+    scene: '小红在前面，小明在后面',
+  },
+  {
+    value: 'up',
+    label: '上面',
+    question: '看位置：书放在桌子的上面。书在桌子的哪面？',
+    scene: '书在桌子上面',
+  },
+  {
+    value: 'down',
+    label: '下面',
+    question: '看位置：足球放在椅子的下面。足球在椅子的哪面？',
+    scene: '足球在椅子下面',
+  },
 ];
 
 function options() {
