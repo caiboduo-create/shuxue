@@ -15,29 +15,27 @@ function LineFigure({ variant }) {
   const y = 60;
   const x1 = 50;
   const x2 = 350;
+  const start = variant === 'line' ? x1 + 14 : x1;
+  const end = variant === 'segment' ? x2 : x2 - 14;
   return (
     <svg viewBox="0 0 400 120" width="100%" style={{ maxWidth: 420 }}>
-      <defs>
-        <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
-          <path d="M0,0 L8,3 L0,6 Z" fill={C.blue} />
-        </marker>
-      </defs>
       <line
-        x1={variant === 'line' ? x1 + 8 : x1}
+        x1={start}
         y1={y}
-        x2={variant === 'segment' ? x2 : x2 - 8}
+        x2={end}
         y2={y}
         stroke={C.blue}
         strokeWidth="3"
-        markerEnd={variant === 'segment' ? '' : 'url(#arrow)'}
-        markerStart={variant === 'line' ? 'url(#arrow)' : ''}
       />
+      {variant === 'line' && (
+        <polygon points={`${x1},${y} ${x1 + 18},${y - 9} ${x1 + 18},${y + 9}`} fill={C.blue} />
+      )}
+      {variant !== 'segment' && (
+        <polygon points={`${x2},${y} ${x2 - 18},${y - 9} ${x2 - 18},${y + 9}`} fill={C.blue} />
+      )}
       {/* 端点圆点：线段两个、射线一个、直线没有 */}
       {variant !== 'line' && <circle cx={x1} cy={y} r="5" fill={C.ink} />}
       {variant === 'segment' && <circle cx={x2} cy={y} r="5" fill={C.ink} />}
-      <text x="200" y="100" textAnchor="middle" fill="#94a3b8" fontSize="13">
-        {variant === 'segment' ? '两端封口 = 线段' : variant === 'ray' ? '一端无限延伸 = 射线' : '两端无限延伸 = 直线'}
-      </text>
     </svg>
   );
 }
@@ -122,7 +120,7 @@ const SHAPE_DEF = {
   para: { poly: '60,135 150,135 180,55 90,55', axes: [], caption: '平行四边形 · 没有对称轴' },
 };
 
-function SymmetryFigure({ shape }) {
+function SymmetryFigure({ shape, showAxes = false }) {
   const def = SHAPE_DEF[shape];
   if (!def) return null;
   return (
@@ -132,10 +130,10 @@ function SymmetryFigure({ shape }) {
       ) : (
         <polygon points={def.poly} fill="#eff5ff" stroke={C.blue} strokeWidth="2.5" />
       )}
-      {def.axes.map((a, i) => (
+      {showAxes && def.axes.map((a, i) => (
         <line key={i} x1={a[0]} y1={a[1]} x2={a[2]} y2={a[3]} stroke={C.amber} strokeWidth="2" strokeDasharray="6 4" />
       ))}
-      <text x="110" y="166" textAnchor="middle" fill="#94a3b8" fontSize="13">{def.caption}</text>
+      {showAxes && <text x="110" y="166" textAnchor="middle" fill="#94a3b8" fontSize="13">{def.caption}</text>}
     </svg>
   );
 }
@@ -564,7 +562,7 @@ export default function GeometrySVG({ visual }) {
   if (visual.kind === 'line') inner = <LineFigure variant={visual.variant} />;
   else if (visual.kind === 'angle') inner = <AngleFigure degrees={visual.degrees} />;
   else if (visual.kind === 'rect') inner = <RectFigure {...visual} />;
-  else if (visual.kind === 'symmetry') inner = <SymmetryFigure shape={visual.shape} />;
+  else if (visual.kind === 'symmetry') inner = <SymmetryFigure {...visual} />;
   else if (visual.kind === 'points') inner = <PointsFigure {...visual} />;
   else if (visual.kind === 'point-line') inner = <PointLineFigure {...visual} />;
   else if (visual.kind === 'circle') inner = <CircleFigure {...visual} />;
