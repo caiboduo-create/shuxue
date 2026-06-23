@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { addWrong, recordAnswer, weakestTopic } from '../lib/store.js';
+import { addWrong, recordAnswer, resolveWrong, weakestTopic } from '../lib/store.js';
 import GeometrySVG from '../components/GeometrySVG.jsx';
 import ExplainView from '../components/ExplainView.jsx';
 
@@ -14,6 +14,12 @@ const DIFFS = [
 export default function Quiz() {
   const { topicId } = useParams();
   const nav = useNavigate();
+  const loc = useLocation();
+  const retry = loc.state?.retryQuestion; // 从错题本「重做这道题」带过来的原题
+  const backTo = loc.state?.backTo || '/grades';
+  const backLabel = loc.state?.backLabel || '换知识点';
+  const placementId = retry?.placementId || loc.state?.placementId || null;
+  const requestedTopicTitle = loc.state?.topicTitle || retry?.topicTitle || null;
 
   const [difficulty, setDifficulty] = useState('medium');
   const [q, setQ] = useState(null);
@@ -25,6 +31,7 @@ export default function Quiz() {
   const [result, setResult] = useState(null); // 判题结果
   const [explain, setExplain] = useState(null);
   const [explaining, setExplaining] = useState(false);
+  const displayTopicTitle = requestedTopicTitle || q?.topicTitle || '加载中…';
 
   const load = useCallback(
     async (diff) => {
@@ -35,7 +42,7 @@ export default function Quiz() {
       setSelected(null);
       setInput('');
       try {
-        const { question } = await api.question(topicId, diff);
+        const { question } = await api.question(topicId, diff, { placementId, topicTitle: requestedTopicTitle });
         setQ(question);
       } catch (e) {
         setErr(e.message);
@@ -43,13 +50,25 @@ export default function Quiz() {
         setLoading(false);
       }
     },
-    [topicId]
+    [topicId, placementId, requestedTopicTitle]
   );
 
   useEffect(() => {
-    load(difficulty);
+    // 错题本「重做这道题」：直接用原题（同参数），不重新出题
+    if (retry && retry.topicId === topicId) {
+      setQ(retry);
+      setDifficulty(retry.difficulty || 'medium');
+      setLoading(false);
+      setErr('');
+      setResult(null);
+      setExplain(null);
+      setSelected(null);
+      setInput('');
+    } else {
+      load(difficulty);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId]);
+  }, [topicId, placementId, retry?.id]);
 
   function changeDiff(v) {
     setDifficulty(v);
@@ -63,21 +82,38 @@ export default function Quiz() {
       const r = await api.judge(q.topicId, q.params, userAnswer);
       setResult(r);
       // 记录进度
-      recordAnswer({ topicId: q.topicId, topicTitle: q.topicTitle, correct: r.correct });
-      // 答错存入错题本
+      const activePlacementId = q.placementId || placementId || null;
+      recordAnswer({
+        topicId: q.topicId,
+        placementId: activePlacementId,
+        topicTitle: displayTopicTitle,
+        curriculum: q.curriculum,
+        correct: r.correct,
+      });
       if (!r.correct) {
+        // 答错存入错题本（保存足够信息以便"重做这道题"原样复现）
         const correctText =
           r.correctValue !== undefined
             ? q.options?.find((o) => o.value === r.correctValue)?.label ?? r.correctValue
             : r.correctAnswer;
         addWrong({
           topicId: q.topicId,
-          topicTitle: q.topicTitle,
+          placementId: activePlacementId,
+          topicTitle: displayTopicTitle,
+          curriculum: q.curriculum,
+          category: q.category,
           difficulty: q.difficulty,
           stem: q.stem,
+          type: q.type,
+          options: q.options,
+          visual: q.visual,
+          params: q.params,
           yourAnswer: q.type === 'choice' ? q.options.find((o) => o.value === userAnswer)?.label : userAnswer,
           correctAnswer: q.type === 'choice' ? correctText : String(correctText),
         });
+      } else {
+        // 答对了：若这道题在错题本里，自动移除（做对即清除）
+        resolveWrong(q.topicId, q.params, activePlacementId);
       }
       // 自动拉取讲解
       setExplaining(true);
@@ -95,17 +131,17 @@ export default function Quiz() {
   if (err)
     return (
       <div>
-        <Link to="/grades" className="back">← 返回</Link>
+        <Link to={backTo} className="back">{backLabel}</Link>
         <div className="empty">出错了：{err}<br /><span className="muted">请确认后端服务在运行。</span></div>
       </div>
     );
 
   return (
     <div>
-      <Link to="/grades" className="back">← 换知识点</Link>
+      <Link to={backTo} className="back">{backLabel}</Link>
 
       <div className="row between wrap mt12">
-        <h2>{q?.topicTitle || '加载中…'}</h2>
+        <h2>{displayTopicTitle}</h2>
         <div className="seg">
           {DIFFS.map((d) => (
             <button key={d.v} className={difficulty === d.v ? 'on' : ''} onClick={() => changeDiff(d.v)}>
@@ -116,16 +152,16 @@ export default function Quiz() {
       </div>
 
       {loading && (
-        <div className="card mt16 row">
+        <div className="content-card mt16 row">
           <span className="spinner" /> <span className="muted">正在出题…</span>
         </div>
       )}
 
       {!loading && q && (
-        <div className="card mt16">
+        <div className="page-panel orange mt16">
           <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
             <span className="badge">{q.category}</span>
-            <span className="badge grey">{DIFFS.find((d) => d.v === q.difficulty)?.label}</span>
+            <span className="badge grey">{DIFFS.find((d) => d.v === q.difficulty)?.label || '练习'}</span>
           </div>
 
           <div className="stem">{q.stem}</div>
@@ -210,7 +246,14 @@ export default function Quiz() {
                 下一题 →
               </button>
               {weak && weak.id !== topicId && (
-                <button className="btn btn-amber" onClick={() => nav(`/quiz/${weak.id}`)}>
+                <button
+                  className="btn btn-amber"
+                  onClick={() =>
+                    nav(`/quiz/${weak.id}`, {
+                      state: { placementId: weak.placementId, topicTitle: weak.title },
+                    })
+                  }
+                >
                   练薄弱点「{weak.title}」
                 </button>
               )}

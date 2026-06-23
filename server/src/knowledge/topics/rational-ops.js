@@ -7,13 +7,14 @@ function fmt(n) {
 
 export default {
   id: 'rational-ops',
+  objective: '掌握有理数的加减运算，重点突破正负号。',
   title: '有理数加减运算',
   category: '数与运算',
   grades: [7],
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const range = difficulty === 'easy' ? 10 : difficulty === 'hard' ? 50 : 20;
+    const range = difficulty === 'easy' ? 30 : difficulty === 'hard' ? 300 : 120;
     const a = randInt(-range, range);
     const b = randInt(-range, range);
     const op = pick(['+', '-']);

@@ -22,8 +22,18 @@ function write(key, val) {
 export function getWrongBook() {
   return read(WRONG_KEY, []);
 }
+
+// 判断两条错题是不是"同一道题"：知识点相同且参数完全一致
+function sameQuestion(a, b) {
+  if (!a.params || !b.params) return false;
+  const aKey = a.placementId || a.topicId;
+  const bKey = b.placementId || b.topicId;
+  return aKey === bKey && JSON.stringify(a.params) === JSON.stringify(b.params);
+}
+
 export function addWrong(entry) {
-  const list = getWrongBook();
+  // 同一道题只保留最新一条，避免错题本里同题重复堆积
+  const list = getWrongBook().filter((w) => !sameQuestion(w, entry));
   list.unshift({ ...entry, ts: Date.now() });
   write(WRONG_KEY, list.slice(0, 200)); // 最多保留 200 条
 }
@@ -32,6 +42,20 @@ export function removeWrong(ts) {
     WRONG_KEY,
     getWrongBook().filter((w) => w.ts !== ts)
   );
+}
+// 做对某道题后，自动把错题本里这道题（同知识点 + 同参数）移除，形成"做对即清除"的闭环
+export function resolveWrong(topicId, params, placementId = null) {
+  const list = getWrongBook();
+  const key = JSON.stringify(params);
+  const scopeKey = placementId || topicId;
+  const next = list.filter(
+    (w) => !((w.placementId || w.topicId) === scopeKey && w.params && JSON.stringify(w.params) === key)
+  );
+  if (next.length !== list.length) {
+    write(WRONG_KEY, next);
+    return true;
+  }
+  return false;
 }
 export function clearWrong() {
   write(WRONG_KEY, []);
@@ -42,15 +66,26 @@ export function clearWrong() {
 export function getStats() {
   return read(STAT_KEY, { total: 0, correct: 0, byTopic: {} });
 }
-export function recordAnswer({ topicId, topicTitle, correct }) {
+export function recordAnswer({ topicId, placementId = null, topicTitle, curriculum = null, correct }) {
   const s = getStats();
   s.total += 1;
   if (correct) s.correct += 1;
-  const t = s.byTopic[topicId] || { title: topicTitle, total: 0, correct: 0 };
+  const progressId = placementId || topicId;
+  const t = s.byTopic[progressId] || {
+    topicId,
+    placementId,
+    title: topicTitle,
+    curriculum,
+    total: 0,
+    correct: 0,
+  };
   t.total += 1;
   if (correct) t.correct += 1;
+  t.topicId = topicId;
+  t.placementId = placementId;
   t.title = topicTitle;
-  s.byTopic[topicId] = t;
+  t.curriculum = curriculum || t.curriculum || null;
+  s.byTopic[progressId] = t;
   write(STAT_KEY, s);
   return s;
 }
@@ -59,13 +94,24 @@ export function resetStats() {
 }
 
 // 找出正确率最低的知识点（薄弱点），用于"针对薄弱点继续出题"
-export function weakestTopic(minAttempts = 3) {
+export function weakestTopic(minAttempts = 2) {
+  return weakTopics({ minAttempts })[0] || null;
+}
+
+// 薄弱知识点列表：正确率 < 100% 且练习达到最少次数，按正确率升序（最薄弱的排最前）
+export function weakTopics({ minAttempts = 2 } = {}) {
   const s = getStats();
-  let weakest = null;
-  for (const [id, t] of Object.entries(s.byTopic)) {
-    if (t.total < minAttempts) continue;
-    const rate = t.correct / t.total;
-    if (!weakest || rate < weakest.rate) weakest = { id, title: t.title, rate, ...t };
-  }
-  return weakest;
+  return Object.entries(s.byTopic)
+    .map(([progressId, t]) => ({
+      id: t.topicId || progressId,
+      progressId,
+      placementId: t.placementId || (t.topicId && progressId !== t.topicId ? progressId : null),
+      title: t.title,
+      curriculum: t.curriculum || null,
+      total: t.total,
+      correct: t.correct,
+      rate: t.correct / t.total,
+    }))
+    .filter((t) => t.total >= minAttempts && t.rate < 1)
+    .sort((a, b) => a.rate - b.rate);
 }

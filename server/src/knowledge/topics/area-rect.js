@@ -3,13 +3,14 @@ import { randInt, pick } from '../util.js';
 // 长方形 / 正方形的面积（小学 3 年级）
 export default {
   id: 'area-rect',
+  objective: '理解面积的含义，会算长方形和正方形的面积。',
   title: '长方形和正方形的面积',
   category: '图形与几何',
   grades: [3, 4],
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const max = difficulty === 'easy' ? 9 : difficulty === 'hard' ? 30 : 15;
+    const max = difficulty === 'easy' ? 30 : difficulty === 'hard' ? 120 : 70;
     const unit = '厘米';
     const shape = pick(['rect', 'square']);
     if (shape === 'square') {

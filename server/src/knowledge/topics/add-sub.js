@@ -15,59 +15,221 @@ const STEMS_SUB = [
   (a, b) => `${a} 比 ${b} 多多少？`,
 ];
 
+const SCOPE_CONFIG = {
+  'within-5': { lo: 0, hi: 5, ops: ['+', '-'], resultMax: 5 },
+  'within-10': { lo: 0, hi: 10, ops: ['+', '-'], resultMax: 10 },
+  'plus-within-20-carry': { lo: 2, hi: 9, ops: ['+'], resultMin: 11, resultMax: 20 },
+  'minus-within-20-borrow': { minuendLo: 11, minuendHi: 20, subtrahendLo: 2, subtrahendHi: 9, ops: ['-'], borrow: true },
+  'within-100-basic': { lo: 1, hi: 99, ops: ['+', '-'], resultMax: 100, noCarry: true, noBorrow: true },
+  'within-100-carry': { lo: 10, hi: 99, ops: ['+', '-'], resultMax: 100, carry: true, borrow: true },
+  'within-1000': { lo: 100, hi: 999, ops: ['+', '-'], resultMax: 1000 },
+  'within-10000': { lo: 1000, hi: 9999, ops: ['+', '-'], resultMax: 9999 },
+};
+
 function range(difficulty) {
-  if (difficulty === 'easy') return [1, 20];
-  if (difficulty === 'hard') return [100, 999];
-  return [10, 99];
+  // 数值整体增大并分档：易=两位内，中=三位内，难=四位数
+  if (difficulty === 'easy') return [1, 80];
+  if (difficulty === 'hard') return [300, 4000];
+  return [20, 400];
+}
+
+function scopedConfig(scope) {
+  return scope?.id ? SCOPE_CONFIG[scope.id] : null;
+}
+
+function boundedAdd(cfg) {
+  for (let i = 0; i < 120; i++) {
+    const a = randInt(cfg.lo, cfg.hi);
+    const b = randInt(cfg.lo, cfg.hi);
+    const sum = a + b;
+    if (sum === 0) continue;
+    if (cfg.resultMin !== undefined && sum < cfg.resultMin) continue;
+    if (cfg.resultMax !== undefined && sum > cfg.resultMax) continue;
+    if (cfg.carry && (a % 10) + (b % 10) < 10) continue;
+    if (cfg.noCarry && (a % 10) + (b % 10) >= 10) continue;
+    return [a, b];
+  }
+  return [randInt(cfg.lo, cfg.hi), randInt(cfg.lo, cfg.hi)];
+}
+
+function boundedSub(cfg) {
+  if (cfg.borrow && cfg.minuendLo !== undefined && cfg.subtrahendLo !== undefined) {
+    for (let i = 0; i < 120; i++) {
+      const a = randInt(cfg.minuendLo, cfg.minuendHi);
+      const b = randInt(cfg.subtrahendLo, cfg.subtrahendHi);
+      if (a >= b && a % 10 < b % 10) return [a, b];
+    }
+    return [13, 8];
+  }
+
+  let a = randInt(cfg.lo, cfg.hi);
+  let b = randInt(cfg.lo, cfg.hi);
+  for (let i = 0; i < 80; i++) {
+    a = randInt(cfg.lo, cfg.hi);
+    b = randInt(cfg.lo, cfg.hi);
+    if (b > a) [a, b] = [b, a];
+    if (a === 0 && b === 0) continue;
+    if (cfg.lo === 0 && b === 0) continue;
+    break;
+  }
+  if (cfg.borrow || cfg.noBorrow) {
+    for (let i = 0; i < 120; i++) {
+      a = randInt(cfg.lo, cfg.hi);
+      b = randInt(cfg.lo, cfg.hi);
+      if (b > a) [a, b] = [b, a];
+      if (a === 0 && b === 0) continue;
+      const hasBorrow = a % 10 < b % 10;
+      if (cfg.borrow && hasBorrow) return [a, b];
+      if (cfg.noBorrow && !hasBorrow) return [a, b];
+    }
+  }
+  return [a, b];
+}
+
+function splitTensOnes(n) {
+  return { tens: Math.floor(n / 10) * 10, ones: n % 10 };
+}
+
+function directAnswer(a, b, op, ans) {
+  return {
+    aiPolish: false,
+    steps: [{ title: '答案', detail: `${a} ${op} ${b} = ${ans}。` }],
+    whyItWorks: '',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function countAnswer(a, b, op, ans) {
+  return {
+    aiPolish: false,
+    steps: [
+      {
+        title: '答案',
+        detail:
+          op === '+'
+            ? `${a} 加 ${b}，可以接着数，答案是 ${ans}。`
+            : `${a} 减 ${b}，就是拿走 ${b} 个，答案是 ${ans}。`,
+      },
+    ],
+    whyItWorks: '',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function makeTwentyCarryExplain(a, b, ans) {
+  const first = Math.max(a, b);
+  const second = Math.min(a, b);
+  const toTen = 10 - first;
+  const rest = second - toTen;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '先凑成 10', detail: `${first} 再加 ${toTen} 就是 10。` },
+      { title: '再加剩下的数', detail: `${second} 可以分成 ${toTen} 和 ${rest}，所以 ${first} + ${second} = 10 + ${rest} = ${ans}。` },
+    ],
+    whyItWorks: '先凑成 10，再接着算，会更容易。',
+    commonMistakes: [],
+    summary: `${a} + ${b} = ${ans}。`,
+  };
+}
+
+function makeTwentyBorrowExplain(a, b, ans) {
+  const ones = a - 10;
+  const tenMinus = 10 - b;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '先看成 10 和几', detail: `${a} 可以看成 10 和 ${ones}。` },
+      { title: '先算 10 减', detail: `10 - ${b} = ${tenMinus}。` },
+      { title: '再加剩下的', detail: `${tenMinus} + ${ones} = ${ans}，所以 ${a} - ${b} = ${ans}。` },
+    ],
+    whyItWorks: '把十几拆成 10 和几，先用 10 去减，再把剩下的几加回来。',
+    commonMistakes: ['不要把十几里的“几”忘记加回来。'],
+    summary: `${a} - ${b} = ${ans}。`,
+  };
+}
+
+function makeHundredBasicExplain(a, b, op, ans) {
+  const A = splitTensOnes(a);
+  const B = splitTensOnes(b);
+  const tenPart = op === '+' ? A.tens + B.tens : A.tens - B.tens;
+  const onePart = op === '+' ? A.ones + B.ones : A.ones - B.ones;
+  return {
+    aiPolish: false,
+    steps: [
+      { title: '分开看', detail: `${a} 可以看成 ${A.tens} 和 ${A.ones}，${b} 可以看成 ${B.tens} 和 ${B.ones}。` },
+      {
+        title: '分别算',
+        detail:
+          op === '+'
+            ? `先算整十数：${A.tens} + ${B.tens} = ${tenPart}；再算几个一：${A.ones} + ${B.ones} = ${onePart}。`
+            : `先算整十数：${A.tens} - ${B.tens} = ${tenPart}；再算几个一：${A.ones} - ${B.ones} = ${onePart}。`,
+      },
+      { title: '合起来', detail: `${tenPart} 和 ${onePart} 合起来是 ${ans}。` },
+    ],
+    whyItWorks: '把十个十个的部分和一个一个的部分分开算，再合起来就可以。',
+    commonMistakes: [],
+    summary: `${a} ${op} ${b} = ${ans}。`,
+  };
+}
+
+function makeColumnExplain(a, b, op, ans, level = 'hundred') {
+  const upperWord = level === 'large' ? '个位、十位、百位等数位' : '个位、十位';
+  const adjustWord = op === '+' ? '满十向前一位进 1' : '不够减时向前一位退 1 当 10';
+  return {
+    steps: [
+      { title: '看清运算', detail: `这是一道${op === '+' ? '加法' : '减法'}题：${a} ${op} ${b}。` },
+      { title: '按数位计算', detail: `${upperWord}对齐，从个位开始算，${adjustWord}。` },
+      { title: '写出答案', detail: `${a} ${op} ${b} = ${ans}。` },
+    ],
+    whyItWorks: '相同数位表示的大小相同，所以要同一位上的数和同一位上的数相加减。',
+    commonMistakes: [op === '+' ? '进位后忘记多加 1。' : '退位后忘记这一位已经少了 1。', '数位没有对齐就直接计算。'],
+    summary: `${a} ${op} ${b} = ${ans}。关键是数位对齐，再处理好${op === '+' ? '进位' : '退位'}。`,
+  };
 }
 
 export default {
   id: 'add-sub',
+  objective: '掌握整数加法和减法，并能解决简单的生活问题。',
   title: '整数加减法',
   category: '数与运算',
   grades: [1, 2, 3],
   difficulties: ['easy', 'medium', 'hard'],
 
-  generate(difficulty) {
-    const [lo, hi] = range(difficulty);
-    const op = pick(['+', '-']);
-    let a = randInt(lo, hi);
-    let b = randInt(lo, hi);
-    if (op === '-' && b > a) [a, b] = [b, a]; // 保证不出现负数（小学阶段）
+  generate(difficulty, context = {}) {
+    const cfg = scopedConfig(context.scope);
+    const op = pick(cfg?.ops || ['+', '-']);
+    let a;
+    let b;
+
+    if (cfg) {
+      [a, b] = op === '+' ? boundedAdd(cfg) : boundedSub(cfg);
+    } else {
+      const [lo, hi] = range(difficulty);
+      a = randInt(lo, hi);
+      b = randInt(lo, hi);
+      if (op === '-' && b > a) [a, b] = [b, a]; // 保证不出现负数（小学阶段）
+    }
+
     const stem = op === '+' ? pick(STEMS_ADD)(a, b) : pick(STEMS_SUB)(a, b);
-    return { type: 'numeric', stem, params: { a, b, op } };
+    return { type: 'numeric', stem, params: { a, b, op, scopeId: context.scope?.id || null } };
   },
 
   solve({ a, b, op }) {
     return { answer: op === '+' ? a + b : a - b };
   },
 
-  explain({ a, b, op }) {
+  explain({ a, b, op, scopeId }) {
     const ans = op === '+' ? a + b : a - b;
-    const steps =
-      op === '+'
-        ? [
-            { title: '第一步：看清要求什么', detail: `这是一道加法题，求 ${a} 和 ${b} 合起来是多少。` },
-            { title: '第二步：对齐相加', detail: `个位、十位、百位分别对齐，从个位开始往上加，满十就向前一位进 1。` },
-            { title: '第三步：得出结果', detail: `${a} + ${b} = ${ans}。` },
-          ]
-        : [
-            { title: '第一步：看清要求什么', detail: `这是一道减法题，求 ${a} 减去 ${b} 还剩多少。` },
-            { title: '第二步：对齐相减', detail: `数位对齐，从个位开始往上减，不够减就向前一位借 1 当 10。` },
-            { title: '第三步：得出结果', detail: `${a} − ${b} = ${ans}。` },
-          ];
-    return {
-      steps,
-      whyItWorks:
-        op === '+'
-          ? '加法就是把两部分合并成整体，所以把两个数对齐相加即可。'
-          : '减法是从总数里去掉一部分，剩下的就是答案，所以用大数减小数。',
-      commonMistakes: [
-        '忘记进位或借位，导致结果差 10 或 100。',
-        '数位没对齐就直接相加减。',
-      ],
-      summary: `${a} ${op} ${b} = ${ans}。做这类题的关键是数位对齐 + 处理好进位/借位。`,
-    };
+    if (scopeId === 'within-5') return directAnswer(a, b, op, ans);
+    if (scopeId === 'within-10') return countAnswer(a, b, op, ans);
+    if (scopeId === 'plus-within-20-carry') return makeTwentyCarryExplain(a, b, ans);
+    if (scopeId === 'minus-within-20-borrow') return makeTwentyBorrowExplain(a, b, ans);
+    if (scopeId === 'within-100-basic') return makeHundredBasicExplain(a, b, op, ans);
+    if (scopeId === 'within-100-carry') return makeColumnExplain(a, b, op, ans, 'hundred');
+    return makeColumnExplain(a, b, op, ans, 'large');
   },
 
   llmContext({ a, b, op }) {

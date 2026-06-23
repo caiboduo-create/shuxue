@@ -24,25 +24,31 @@ export default function GradeSelect() {
 
   return (
     <div>
-      <Link to="/" className="back">← 返回首页</Link>
-      <h2 className="mt12">选择年级</h2>
-      <p className="muted mt8">先选年级，再挑想练的知识点。</p>
-
-      {stages.map((stage) => (
-        <section key={stage} className="mt24">
-          <div className="badge grey">{stage}</div>
-          <div className="grid-cards mt12">
-            {grades
-              .filter((g) => g.stage === stage)
-              .map((g) => (
-                <button key={g.value} className="pick-card" onClick={() => nav(`/grade/${g.value}`)}>
-                  <div className="pc-title">{g.label}</div>
-                  <div className="pc-sub">查看知识点 →</div>
-                </button>
-              ))}
+      <Link to="/" className="back home-back">返回首页</Link>
+      <section className="page-panel blue mt12">
+        <div className="panel-head">
+          <div>
+            <h2>选择年级</h2>
+            <p className="panel-sub">先选年级，再挑想练的知识点。</p>
           </div>
-        </section>
-      ))}
+        </div>
+
+        {stages.map((stage) => (
+          <section key={stage} className="section-gap">
+            <div className="badge grey">{stage}</div>
+            <div className="grid-cards mt12">
+              {grades
+                .filter((g) => g.stage === stage)
+                .map((g) => (
+                  <button key={g.value} className="pick-card choice-card" onClick={() => nav(`/grade/${g.value}`)}>
+                    <div className="pc-title">{g.label}</div>
+                    <div className="pc-sub">查看知识点 →</div>
+                  </button>
+                ))}
+            </div>
+          </section>
+        ))}
+      </section>
     </div>
   );
 }

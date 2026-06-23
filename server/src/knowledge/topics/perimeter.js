@@ -3,13 +3,14 @@ import { randInt, pick } from '../util.js';
 // 长方形 / 正方形的周长（小学 3 年级）
 export default {
   id: 'perimeter',
+  objective: '理解周长的含义，会算长方形和正方形的周长。',
   title: '长方形和正方形的周长',
   category: '图形与几何',
   grades: [3, 4],
   difficulties: ['easy', 'medium', 'hard'],
 
   generate(difficulty) {
-    const max = difficulty === 'easy' ? 10 : difficulty === 'hard' ? 50 : 20;
+    const max = difficulty === 'easy' ? 40 : difficulty === 'hard' ? 250 : 120;
     const unit = '厘米';
     const shape = pick(['rect', 'square']);
     if (shape === 'square') {

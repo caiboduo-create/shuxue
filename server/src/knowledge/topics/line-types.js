@@ -16,6 +16,7 @@ const FACTS = {
 
 export default {
   id: 'line-types',
+  objective: '区分线段、射线、直线，理解端点个数与能否延伸的不同。',
   title: '线段、射线和直线',
   category: '图形与几何',
   grades: [4],

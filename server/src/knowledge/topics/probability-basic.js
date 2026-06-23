@@ -11,6 +11,7 @@ const ITEMS = [
 
 export default {
   id: 'probability-basic',
+  objective: '理解概率的含义，会算简单事件发生的可能性。',
   title: '简单事件的概率',
   category: '统计与概率',
   grades: [7, 8],
